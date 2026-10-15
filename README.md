@@ -36,5 +36,9 @@
 
 ## Сборка и запуск
 
+**C++:**
 g++ -std=c++17 -Wno-attributes *.cpp -o app.exe
 app.exe
+**Java:**
+javac -d out *.java
+java -cp out Main
