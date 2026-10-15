@@ -1,33 +1,16 @@
 #include "formula.hpp"
-#include "table.hpp"
 
 #include <iostream>
-#include <map>
-#include <sstream>    // std::istringstream
-#include <string>     // std::string
-#include <vector>     // std::vector
-#include <cctype>     // std::isalpha
+#include <sstream>
+#include <cctype>
 
 namespace lab_comps {
 
-Formula::Formula(Table* table, const std::string& expression, const std::string& name):
-    m_table{ table },
-    m_name{ name },
-    m_expression{ expression } {
-    
-    // 1. Проверить, что есть указатель на таблицу
-    if (m_table == nullptr) {
-        std::cout << "[Formula] Ошибка: нет указателя на таблицу\n";
-        return;
-    }
-    // 2. Обработать исходное выражение
-    parseExpression();
-
-    // 3. Проверить, что все используемые переменные есть где-то в таблице
-    if (!validate()) {
-        std::cout << "[Formula] Ошибка: не все переменные найдены в таблице (правило №4)\n";
-        return;
-    }
+Formula::Formula(const std::string& name, const std::string& expression)
+    : m_name{ name }
+    , m_expression{ expression }
+{
+    ParseExpression();
     std::cout << "[Formula] Создана: " << m_name << "\n";
 }
 
@@ -35,26 +18,19 @@ Formula::~Formula() {
     std::cout << "[Formula] Уничтожена: " << m_name << "\n";
 }
 
-void Formula::setTable(Table* table) {
-    m_table = table;
-    std::cout << "[Formula] Теперь привязана к таблице: " << m_table->getName() << "\n";
-}
-
-const std::string& Formula::getName() const {
+const std::string& Formula::GetName() const {
     return m_name;
 }
 
-const std::string& Formula::getExpression() const {
+const std::string& Formula::GetExpression() const {
     return m_expression;
 }
 
-const std::vector<std::string>& Formula::getVars() const {
+const std::vector<std::string>& Formula::GetVars() const {
     return m_vars;
 }
 
-void Formula::parseExpression() {
-    // TODO: реальный парсер
-    // Пока — заглушка
+void Formula::ParseExpression() {
     std::istringstream iss(m_expression);
     std::string token;
     while (iss >> token) {
@@ -65,24 +41,9 @@ void Formula::parseExpression() {
     }
 }
 
-bool Formula::validate() {
-    for (auto& var : m_vars) {
-        bool found = false;
-        for (auto* col : m_table->getColumns()) {
-            if (col->getVar() == var) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) return false;
-    }
-    return true;
-}
-
-double Formula::evaluate(const std::map<std::string, double>& vars) const {
+double Formula::Evaluate(const std::map<std::string, double>& vars) const {
     // TODO: реальный парсер
-    // Пока — заглушка
-    return 42.0;  // ← ответ на всё
+    return 42.0;
 }
 
 } // namespace lab_comps
