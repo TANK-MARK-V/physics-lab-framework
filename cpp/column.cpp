@@ -9,7 +9,6 @@ Column::Column(const std::string& name, const std::string& var, int precision)
     : m_name{ name }
     , m_var{ var }
     , m_precision{ precision }
-    , m_formula{ nullptr }
 {
     if (precision < 0) {
         // Пока просто обнуляем точность
@@ -40,7 +39,7 @@ const std::vector<double>& Column::GetData() const {
 }
 
 std::shared_ptr<Formula> Column::GetFormula() const {
-    return m_formula;
+    return m_formula.lock();  // ← weak → shared
 }
 
 void Column::SetData(const std::vector<double>& data) {
@@ -58,7 +57,7 @@ void Column::SetPrecision(int precision) {
 }
 
 void Column::SetFormula(std::shared_ptr<Formula> formula) {
-    m_formula = formula;
+    m_formula = formula;  // ← shared → weak
 }
 
 bool Column::IsReady(int expectedLength) const {

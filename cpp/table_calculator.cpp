@@ -53,10 +53,11 @@ bool TableCalculator::TryCalculate() {
 }
 
 bool TableCalculator::CanCalculate(Column* col) const {
-    if (col->GetFormula() == nullptr) {
+    auto formula = col->GetFormula();
+    if (formula == nullptr) {
         return false;
     }
-    for (const auto& var : col->GetFormula()->GetVars()) {
+    for (const auto& var : formula->GetVars()) {
         auto it = m_varsStates.find(var);
         if (it == m_varsStates.end() || !it->second) {
             return false;

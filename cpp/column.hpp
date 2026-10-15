@@ -14,7 +14,7 @@ private:
     std::string m_var;
     int m_precision;
     std::vector<double> m_data;
-    std::shared_ptr<Formula> m_formula;
+    std::weak_ptr<Formula> m_formula;  // Наблюдатель
 
 public:
     Column() = delete;
