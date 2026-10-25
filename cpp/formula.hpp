@@ -6,11 +6,8 @@
 
 namespace lab_comps {
 
-class Table;      // Вперёд-объявление
-
 class Formula {
 private:
-    Table* m_table;
     std::string m_name;
     std::string m_expression;
     std::vector<std::string> m_postfix;
@@ -18,18 +15,17 @@ private:
 
 public:
     Formula() = delete;
-    Formula(Table* table, const std::string& expression, const std::string& name);
+    Formula(const std::string& name, const std::string& expression);
     ~Formula();
 
-    void setTable(Table* table);
+    [[nodiscard]] const std::string& GetName() const;
+    [[nodiscard]] const std::string& GetExpression() const;
+    [[nodiscard]] const std::vector<std::string>& GetVars() const;
 
-    [[nodiscard]] const std::string& getName() const;
-    [[nodiscard]] const std::string& getExpression() const;
-    [[nodiscard]] const std::vector<std::string>& getVars() const;
+    double Evaluate(const std::map<std::string, double>& vars) const;
 
-    void parseExpression();
-    [[nodiscard]] bool validate();
-    double evaluate(const std::map<std::string, double>& vars) const;
+private:
+    void ParseExpression();
 };
 
 } // namespace lab_comps

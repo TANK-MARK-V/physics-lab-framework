@@ -2,39 +2,36 @@
 
 #include <string>
 #include <vector>
-
-#include "formula.hpp"
+#include <memory>
 
 namespace lab_comps {
 
-class Table;      // Вперёд-объявление
+class Formula;
 
 class Column {
 private:
-    Table* m_table;
     std::string m_name;
     std::string m_var;
     int m_precision;
     std::vector<double> m_data;
-    Formula* m_formula;
+    std::weak_ptr<Formula> m_formula;  // Наблюдатель
 
 public:
     Column() = delete;
-    Column(Table* table, const std::string& name,
-            const std::string& var, int precision);
+    Column(const std::string& name, const std::string& var, int precision);
     ~Column();
 
-    void setData(const std::vector<double>& data);
+    [[nodiscard]] const std::string& GetName() const;
+    [[nodiscard]] const std::string& GetVar() const;
+    [[nodiscard]] int GetPrecision() const;
+    [[nodiscard]] const std::vector<double>& GetData() const;
+    [[nodiscard]] std::shared_ptr<Formula> GetFormula() const;
 
-    [[nodiscard]] const std::string& getVar() const;
-    [[nodiscard]] const std::vector<double>& getData() const;
-    [[nodiscard]] const Formula* getFormula() const;
+    void SetData(const std::vector<double>& data);
+    void SetPrecision(int precision);
+    void SetFormula(std::shared_ptr<Formula> formula);
 
-
-    
-    bool setFormula(Formula*);
-    bool isReady() const;
-    bool calculate();
+    [[nodiscard]] bool IsReady(int expectedLength) const;
 };
 
-}   // namespace lab_comps
+} // namespace lab_comps
