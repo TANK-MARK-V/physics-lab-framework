@@ -1,9 +1,12 @@
-#include "table.hpp"
-#include "column.hpp"
+#include "base_column.hpp"
+#include "input_column.hpp"
+#include "formula_column.hpp"
+#include "constant_column.hpp"
 #include "formula.hpp"
 
 #include <iostream>
 #include <memory>
+#include <vector>
 #include <clocale>
 #include <cstdlib>
 
@@ -16,80 +19,96 @@ int main() {
     setlocale(LC_ALL, "ru_RU.UTF-8");
 #endif
 
-    std::cout << "=== ЛР-3: C++ (умные указатели) ===\n";
+    std::cout << "=== ЛР-4: Наследование ===\n\n";
 
-    // ========== 1. UNIQUE_PTR: один владелец ==========
-    std::cout << "\n--- 1. unique_ptr: автоматическое удаление ---\n";
-    {
-        auto table = std::make_unique<Table>("Демо", 3);
-        std::cout << "Таблица создана\n";
-    }  // ← table уничтожена автоматически
-
-    // ========== 1.1. UNIQUE_PTR: std::move ==========
-    std::cout << "\n--- 1.1. unique_ptr: std::move ---\n";
-    auto ptr1 = std::make_unique<Formula>("Тест", "a b");
-    std::cout << "ptr1 до move: " << (ptr1 ? "не пуст" : "пуст") << "\n";
-
-    auto ptr2 = std::move(ptr1);  // ← передача владения
-    std::cout << "ptr1 после move: " << (ptr1 ? "не пуст" : "пуст") << "\n";
-    std::cout << "ptr2: " << ptr2->GetName() << "\n";
-
-    // ========== 2. SHARED_PTR + WEAK_PTR ==========
-    std::cout << "\n--- 2. shared_ptr: несколько владельцев ---\n";
+    // ========== 1. СОЗДАНИЕ ОБЪЕКТОВ ==========
+    std::cout << "--- 1. Создание объектов ---\n";
     auto formula = std::make_shared<Formula>("Скорость", "a t");
-    std::cout << "use_count: " << formula.use_count() << "\n";  // 1
 
+    std::vector<std::unique_ptr<BaseColumn>> columns;
+    columns.push_back(std::make_unique<InputColumn>("a", "a", 2));
+    columns.push_back(std::make_unique<InputColumn>("t", "t", 2));
+    columns.push_back(std::make_unique<FormulaColumn>("v", "v", 2, formula));
+    columns.push_back(std::make_unique<ConstantColumn>("g", "g", 2, 9.8));
+
+    // ========== 2. ВИРТУАЛЬНЫЙ ДЕСТРУКТОР ==========
+    std::cout << "\n--- 2. Уничтожение через указатель на базу ---\n";
     {
-        auto table = std::make_unique<Table>("Демо", 3);
-
-        table->CreateColumn("a", "a", 2);
-        table->CreateColumn("t", "t", 2);
-
-        table->SetColumnData("a", {5, 5, 5});
-        table->SetColumnData("t", {1, 2, 3});
-
-        table->CreateColumn("v", "v", 2, formula);
-        std::cout << "use_count после CreateColumn: " << formula.use_count() << "\n";  // 2
-
-        table->Calculate();
-    }  // ← table уничтожена, но formula жива
-
-    std::cout << "use_count после уничтожения table: " << formula.use_count() << "\n";  // 1
-
-    // ========== 3. WEAK_PTR: наблюдатель ==========
-    std::cout << "\n--- 3. weak_ptr: наблюдатель ---\n";
-    std::weak_ptr<Formula> weakFormula = formula;
-    std::cout << "use_count с weak: " << formula.use_count() << "\n";  // 1 (weak не считается)
-
-    if (auto locked = weakFormula.lock()) {
-        std::cout << "Формула жива: " << locked->GetName() << "\n";
-    } else {
-        std::cout << "Формула уничтожена\n";
+        std::unique_ptr<BaseColumn> col = std::make_unique<FormulaColumn>(
+            "test", "test", 2, formula);
+        // при reset() вызовется ~FormulaColumn(), потом ~BaseColumn()
     }
 
-    formula.reset();  // ← последний владелец ушёл
-    std::cout << "use_count после reset: " << formula.use_count() << "\n";  // 0
+    // ========== 3. КОПИРОВАНИЕ ==========
+    std::cout << "\n--- 3. Копирование ---\n";
 
-    if (auto locked = weakFormula.lock()) {
-        std::cout << "Формула жива: " << locked->GetName() << "\n";
-    } else {
-        std::cout << "Формула уничтожена\n";  // ← сюда
+    // 1. Создаем оригинал с формулой "a t"
+    auto original = std::make_unique<FormulaColumn>("v", "v", 2, formula);
+    original->SetData({1.0, 2.0, 3.0});
+
+    // 2. Поверхностное копирование (делит shared_ptr)
+    FormulaColumn shallowCopy = *original;
+
+    // 3. Глубокое копирование (создает свою формулу через Clone)
+    auto deepCopy = original->Clone();
+
+    // 4. МЕНЯЕМ ДАННЫЕ ВНУТРИ ФОРМУЛЫ У ОРИГИНАЛА (через SetExpression)
+    // Теперь формула у оригинала = "x y", но объект тот же самый
+    original->GetFormula()->SetExpression("x y");
+
+    // 5. ПРОВЕРЯЕМ
+    std::cout << "\n--- 3.1. Поверхностное (делит формулу) ---\n";
+    std::cout << "original: " << original->Describe() << "\n";
+    std::cout << "shallow:  " << shallowCopy.Describe() << "\n";
+    // ОБА покажут "x y" потому что shallowCopy смотрит на ТУ ЖЕ формулу, 
+    // которую только что изменили через original
+
+    std::cout << "\n--- 3.2. Глубокое (своя формула) ---\n";
+    std::cout << "original: " << original->Describe() << "\n";
+    std::cout << "deep:     " << deepCopy->Describe() << "\n";
+    // deep покажет "a t" потому что Clone() создал НОВУЮ формулу, 
+    // и когда мы меняли "x y" у оригинала, deep об этом не знал
+
+    // ========== 4. СТАТИЧЕСКИЙ СЧЁТЧИК ==========
+    std::cout << "\n--- 4. Статический счётчик ---\n";
+    for (auto& col : columns) {
+        std::cout << "ID: " << col->GetId() 
+                  << ", Type: " << col->GetType()
+                  << ", Name: " << col->GetName() << "\n";
     }
 
-    // ========== 4. МАССИВ ОБЪЕКТОВ ==========
-    std::cout << "\n--- 4. unique_ptr<T[]> (массив объектов) ---\n";
-    {
-        auto tables = std::make_unique<Table[]>(2);
-        std::cout << "Массив из 2 таблиц создан\n";
+    // ========== 5. ПОЛИМОРФИЗМ ==========
+    std::cout << "\n--- 5. Полиморфизм ---\n";
+    for (auto& col : columns) {
+        col->Calculate();
+        std::cout << col->Describe() << "\n";
     }
 
-    // ========== 5. МАССИВ УКАЗАТЕЛЕЙ ==========
-    std::cout << "\n--- 5. vector<unique_ptr<Table>> (массив указателей) ---\n";
-    {
-        std::vector<std::unique_ptr<Table>> tables;
-        tables.push_back(std::make_unique<Table>("Таблица 0", 1));
-        tables.push_back(std::make_unique<Table>("Таблица 1", 1));
-        std::cout << "Массив указателей создан\n";
+    // ========== 6. СТРОКИ ==========
+    std::cout << "\n--- 6. Строки ---\n";
+    std::string fullName = "v" + std::string(" (скорость)");
+    std::cout << "Конкатенация: " << fullName << "\n";
+    if (fullName.find("скорость") != std::string::npos) {
+        std::cout << "Поиск: найдено\n";
+    }
+    std::cout << "Подстрока: " << fullName.substr(0, 3) << "\n";
+    
+    if (fullName == "v (скорость)") {
+        std::cout << "Сравнение: равны\n";
+    }
+
+     // ========== 7. THIS: ПЕРЕДАЧА ТЕКУЩЕГО ОБЪЕКТА ==========
+    std::cout << "\n--- 7. this: передача текущего объекта ---\n";
+    
+    std::vector<BaseColumn*> registry;
+    for (auto& col : columns) {
+        col->AddToRegistry(registry);  // ← передача *this
+    }
+    
+    std::cout << "Зарегистрировано колонок: " << registry.size() << "\n";
+    for (auto* col : registry) {
+        std::cout << "  → " << col->GetName() 
+                  << " (тип: " << col->GetType() << ")\n";
     }
 
     std::cout << "\n=== КОНЕЦ ===\n";

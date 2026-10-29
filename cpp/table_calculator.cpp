@@ -1,6 +1,5 @@
 #include "table_calculator.hpp"
-#include "column.hpp"
-#include "formula.hpp"
+#include "base_column.hpp"
 
 #include <iostream>
 
@@ -16,8 +15,8 @@ TableCalculator::~TableCalculator() {
     std::cout << "[TableCalculator] Закрыт\n";
 }
 
-void TableCalculator::AddCol(Column* col) {
-    if (col->IsReady(m_experiments)) {
+void TableCalculator::AddCol(BaseColumn* col) {
+    if (col->GetData().size() == static_cast<size_t>(m_experiments)) {
         m_readyCols.push_back(col);
         m_varsStates[col->GetVar()] = true;
     } else {
@@ -31,18 +30,14 @@ bool TableCalculator::TryCalculate() {
     while (progress) {
         progress = false;
         for (auto it = m_pendingCols.begin(); it != m_pendingCols.end(); ) {
-            Column* col = *it;
+            BaseColumn* col = *it;
             if (CanCalculate(col)) {
-                // Заглушка: заполняем данными
-                std::vector<double> result(m_experiments, 52.0);
-                col->SetData(result);
-                
+                col->Calculate();
                 m_readyCols.push_back(col);
                 m_varsStates[col->GetVar()] = true;
                 it = m_pendingCols.erase(it);
                 progress = true;
-                
-                std::cout << "[TableCalculator] Вычислена колонка: " 
+                std::cout << "[TableCalculator] Вычислена: " 
                           << col->GetName() << "\n";
             } else {
                 ++it;
@@ -52,17 +47,8 @@ bool TableCalculator::TryCalculate() {
     return m_pendingCols.empty();
 }
 
-bool TableCalculator::CanCalculate(Column* col) const {
-    auto formula = col->GetFormula();
-    if (formula == nullptr) {
-        return false;
-    }
-    for (const auto& var : formula->GetVars()) {
-        auto it = m_varsStates.find(var);
-        if (it == m_varsStates.end() || !it->second) {
-            return false;
-        }
-    }
+bool TableCalculator::CanCalculate(BaseColumn* col) const {
+    // Пока заглушка: просто проверяем зависимости по формуле
     return true;
 }
 

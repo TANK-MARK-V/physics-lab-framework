@@ -22,6 +22,8 @@ public:
     [[nodiscard]] const std::string& GetExpression() const;
     [[nodiscard]] const std::vector<std::string>& GetVars() const;
 
+    void SetExpression(const std::string& expression);
+
     double Evaluate(const std::map<std::string, double>& vars) const;
 
 private:

@@ -1,66 +1,63 @@
-import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== ЛР-3: Java ===\n");
+        System.out.println("=== ЛР-4: Java Наследование ===\n");
 
-        // ========== 1. КОМПОЗИЦИЯ ==========
-        System.out.println("--- 1. Композиция: Table создаёт Column ---");
-        Table table = new Table("Демо", 3);
-
-        // Table САМ создаёт колонки без формул
-        table.createColumn("a", "a", 2);
-        table.createColumn("t", "t", 2);
-
-        // Данные
-        table.setColumnData("a", new double[]{5, 5, 5});
-        table.setColumnData("t", new double[]{1, 2, 3});
-
-        System.out.println(table);
-
-        // ========== 2. АГРЕГАЦИЯ ==========
-        System.out.println("\n--- 2. Агрегация: Formula создана СНАРУЖИ ---");
+        // ========== 1. СОЗДАНИЕ ОБЪЕКТОВ ==========
+        System.out.println("--- 1. Создание объектов (super) ---");
         Formula formula = new Formula("Скорость", "a t");
-        System.out.println("Формула: " + formula);
+        
+        List<BaseColumn> columns = new ArrayList<>();
+        columns.add(new InputColumn("a", "a", 2));
+        columns.add(new InputColumn("t", "t", 2));
+        columns.add(new FormulaColumn("v", "v", 2, formula));
+        columns.add(new ConstantColumn("g", "g", 2, 9.8));
 
-        // Table создаёт колонку, но формула передаётся СНАРУЖИ
-        table.createColumn("v", "v", 2, formula);
-
-        // ========== 3. РАСЧЁТ ==========
-        System.out.println("\n--- 3. Расчёт ---");
-        table.calculate();
-
-        // ========== 4. ПРАВИЛО ==========
-        System.out.println("\n--- 4. Правило: точность < 0 ---");
-        table.createColumn("bad", "bad", -1);
-        for (Column col : table.getColumns()) {
-            if (col.getVar().equals("bad")) {
-                System.out.println("Точность: " + col.getPrecision());
-            }
+        // ========== 2. ПОЛИМОРФИЗМ И ОПИСАНИЕ ==========
+        System.out.println("\n--- 2. Полиморфизм и describe ---");
+        for (BaseColumn col : columns) {
+            System.out.println(col.describe());
+            System.out.println(col.getFullInfo()); // final метод
         }
 
-        // ========== 5. ССЫЛКИ И КОПИИ ==========
-        System.out.println("\n--- 5. Ссылки и копии ---");
-        Column first = new Column("first", "f", 2);
-        first.setData(new double[]{1, 2, 3});
+        // ========== 3. ПОВЕРХНОСТНАЯ И ГЛУБОКАЯ КОПИЯ ==========
+        System.out.println("\n--- 3. Копирование ---");
+        FormulaColumn original = new FormulaColumn("v", "v", 2, formula);
+        original.setData(new double[]{1, 2, 3});
 
-        Column second = first;
-        second.setData(new double[]{10, 20, 30});
+        // 3.1. Поверхностная копия (через присваивание ссылки)
+        System.out.println("\n3.1. Поверхностная копия (ссылка)");
+        FormulaColumn shallowCopy = original; // Это просто ссылка на тот же объект!
+        
+        // 3.2. Глубокая копия (через конструктор копирования)
+        System.out.println("\n3.2. Глубокая копия (конструктор)");
+        FormulaColumn deepCopy = new FormulaColumn(original);
 
-        System.out.println("first.data[0]  = " + first.getData()[0]);
-        System.out.println("second.data[0] = " + second.getData()[0]);
-        System.out.println("Один объект? " + (first == second));
+        // Меняем формулу у оригинала
+        original.getFormula().setExpression("x y"); // *Примечание: нужно добавить setExpression в Formula.java
 
-        // ========== 6. СБОРЩИК МУСОРА ==========
-        System.out.println("\n--- 6. Сборщик мусора ---");
-        Column temp = new Column("temp", "tmp", 2);
-        WeakReference<Column> watcher = new WeakReference<>(temp);
-        System.out.println("Объект жив: " + (watcher.get() != null));
+        System.out.println("original: " + original.describe());
+        System.out.println("shallow:  " + shallowCopy.describe()); // Изменится (тот же объект)
+        System.out.println("deep:     " + deepCopy.describe());    // Не изменится (своя формула)
 
-        temp = null;
-        System.gc();
-        System.out.println("Объект жив: " + (watcher.get() != null));
+        // ========== 4. THIS ==========
+        System.out.println("\n--- 4. this ---");
+        // В конструкторе deepCopy мы использовали this.name и this.var
+        System.out.println("Использование this в конструкторе копирования (см. код)");
 
-        System.out.println("\n=== КОНЕЦ ===");
+        // ========== 5. СТАТИЧЕСКИЙ СЧЁТЧИК ==========
+        System.out.println("\n--- 5. Статический счётчик ---");
+        for (BaseColumn col : columns) {
+            System.out.println("ID: " + col.getId() + " | " + col.getFullInfo());
+        }
+
+        // ========== 6. EQUALS И HASHCODE ==========
+        System.out.println("\n--- 6. Сравнение по содержимому ---");
+        ConstantColumn c1 = new ConstantColumn("g", "g", 2, 9.8);
+        ConstantColumn c2 = new ConstantColumn("g", "g", 2, 9.8);
+        System.out.println("c1.equals(c2): " + c1.equals(c2));
+        System.out.println("c1.hashCode() == c2.hashCode(): " + (c1.hashCode() == c2.hashCode()));
     }
 }
