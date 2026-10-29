@@ -2,8 +2,8 @@ import java.util.*;
 
 public class TableCalculator implements AutoCloseable {
     private final int experiments;
-    private final List<Column> readyCols = new ArrayList<>();
-    private final List<Column> pendingCols = new ArrayList<>();
+    private final List<BaseColumn> readyCols = new ArrayList<>();
+    private final List<BaseColumn> pendingCols = new ArrayList<>();
     private final Map<String, Boolean> varsStates = new HashMap<>();
 
     public TableCalculator(int experiments) {
@@ -11,8 +11,8 @@ public class TableCalculator implements AutoCloseable {
         System.out.println("[+] Калькулятор открыт");
     }
 
-    public void addCol(Column col) {
-        if (col.isReady(experiments)) {
+    public void addCol(BaseColumn col) {
+        if (col.getData() != null && col.getData().length == experiments) {
             readyCols.add(col);
             varsStates.put(col.getVar(), true);
         } else {
@@ -25,9 +25,9 @@ public class TableCalculator implements AutoCloseable {
         boolean progress = true;
         while (progress) {
             progress = false;
-            Iterator<Column> it = pendingCols.iterator();
+            Iterator<BaseColumn> it = pendingCols.iterator();
             while (it.hasNext()) {
-                Column col = it.next();
+                BaseColumn col = it.next();
                 if (canCalculate(col)) {
                     double[] result = new double[experiments];
                     Arrays.fill(result, 42.0);
@@ -42,10 +42,12 @@ public class TableCalculator implements AutoCloseable {
         return pendingCols.isEmpty();
     }
 
-    private boolean canCalculate(Column col) {
-        if (col.getFormula() == null) return false;
-        for (String var : col.getFormula().getVars()) {
-            if (!varsStates.getOrDefault(var, false)) return false;
+    private boolean canCalculate(BaseColumn col) {
+        // Проверяем только для формульных колонок
+        if (col instanceof FormulaColumn formulaCol) {
+            for (String var : formulaCol.getFormula().getVars()) {
+                if (!varsStates.getOrDefault(var, false)) return false;
+            }
         }
         return true;
     }

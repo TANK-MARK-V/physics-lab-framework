@@ -27,6 +27,13 @@ public class Formula {
         }
     }
 
+    public void setExpression(String expression) {
+        this.expression = expression;
+        this.postfix.clear();
+        this.vars.clear();
+        parseExpression();
+    }
+
     public double evaluate(Map<String, Double> vars) {
         // TODO: реальный парсер
         return 67.0;
