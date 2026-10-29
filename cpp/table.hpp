@@ -6,14 +6,14 @@
 
 namespace lab_comps {
 
-class Column;
+class BaseColumn;
 class Formula;
 
 class Table {
 private:
     std::string m_name;
     int m_experiments;
-    std::vector<std::unique_ptr<Column>> m_columns;
+    std::vector<std::unique_ptr<BaseColumn>> m_columns;
 
 public:
     Table();
@@ -22,19 +22,19 @@ public:
 
     [[nodiscard]] const std::string& GetName() const;
     [[nodiscard]] int GetExperiments() const;
-    [[nodiscard]] const std::vector<std::unique_ptr<Column>>& GetColumns() const;
+    [[nodiscard]] const std::vector<std::unique_ptr<BaseColumn>>& GetColumns() const;
 
-    // Композиция: Table САМ создаёт колонку
-    void CreateColumn(const std::string& name, const std::string& var, int precision);
+    // Создание колонок разных типов
+    void CreateInputColumn(const std::string& name, const std::string& var, int precision);
+    void CreateFormulaColumn(const std::string& name, const std::string& var, 
+                             int precision, std::shared_ptr<Formula> formula);
+    void CreateConstantColumn(const std::string& name, const std::string& var,
+                              int precision, double value);
 
-    // Агрегация: формула создана СНАРУЖИ
-    void CreateColumn(const std::string& name, const std::string& var, 
-                      int precision, std::shared_ptr<Formula> formula);
-
-    // Установить данные колонке по имени переменной
+    // Установить данные
     void SetColumnData(const std::string& var, const std::vector<double>& data);
 
-    // Расчёт всей таблицы
+    // Расчёт
     void Calculate();
 };
 
