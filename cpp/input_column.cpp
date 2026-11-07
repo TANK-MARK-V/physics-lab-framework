@@ -27,4 +27,14 @@ std::unique_ptr<BaseColumn> InputColumn::Clone() const {
     return std::make_unique<InputColumn>(*this);
 }
 
+void InputColumn::Calculate() {
+    if (GetData().empty()) {
+        std::cout << "[InputColumn] " << m_name << ": данные не введены\n";
+        m_isCalculated = false;
+    } else {
+        std::cout << "[InputColumn] " << m_name << ": данные готовы\n";
+        m_isCalculated = true;
+    }
+}
+
 } // namespace lab_comps

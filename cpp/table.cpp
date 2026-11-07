@@ -3,7 +3,7 @@
 #include "input_column.hpp"
 #include "formula_column.hpp"
 #include "constant_column.hpp"
-#include "formula.hpp"
+#include "ievaluation_strategy.hpp"
 #include "table_calculator.hpp"
 
 #include <iostream>
@@ -44,9 +44,9 @@ void Table::CreateInputColumn(const std::string& name, const std::string& var, i
     m_columns.push_back(std::make_unique<InputColumn>(name, var, precision));
 }
 
-void Table::CreateFormulaColumn(const std::string& name, const std::string& var, 
-                                int precision, std::shared_ptr<Formula> formula) {
-    m_columns.push_back(std::make_unique<FormulaColumn>(name, var, precision, formula));
+void Table::CreateFormulaColumn(const std::string& name, const std::string& var,
+                                int precision, std::shared_ptr<IEvaluationStrategy> strategy) {
+    m_columns.push_back(std::make_unique<FormulaColumn>(name, var, precision, std::move(strategy)));
 }
 
 void Table::CreateConstantColumn(const std::string& name, const std::string& var,
@@ -66,7 +66,7 @@ void Table::SetColumnData(const std::string& var, const std::vector<double>& dat
 void Table::Calculate() {
     TableCalculator calc(m_experiments);
     for (auto& col : m_columns) {
-        calc.AddCol(col.get());  // ← BaseColumn*
+        calc.AddCol(col.get());  // BaseColumn*
     }
     calc.TryCalculate();
 }

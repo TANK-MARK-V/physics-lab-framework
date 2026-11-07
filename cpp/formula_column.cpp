@@ -1,55 +1,58 @@
 #include "formula_column.hpp"
-#include "formula.hpp"
 
 #include <iostream>
+#include <map>
 #include <utility>
-
 
 namespace lab_comps {
 
-FormulaColumn::FormulaColumn(std::string name, std::string var, 
-                             int precision, std::shared_ptr<Formula> formula)
+FormulaColumn::FormulaColumn(std::string name, std::string var, int precision, 
+                             std::shared_ptr<IEvaluationStrategy> strategy)
     : BaseColumn{ std::move(name), std::move(var), precision }
-    , m_formula{ std::move(formula) }
+    , m_strategy{ std::move(strategy) }
 {
     std::cout << "[FormulaColumn] Создана\n";
 }
 
+// 1. Конструктор копирования (ПОВЕРХНОСТНАЯ КОПИЯ)
 FormulaColumn::FormulaColumn(const FormulaColumn& other)
-    : BaseColumn{ other }           // копируем базу
-    , m_formula{ other.m_formula }  // копируем формулу
+    : BaseColumn{ other } // копируем базу
+    , m_strategy{ other.m_strategy } // копируем shared_ptr (делим стратегию)
 {
-    std::cout << "[FormulaColumn] Копия: " << m_name 
-              << " (ID: " << GetId() << ")\n";
+    std::cout << "[FormulaColumn] Поверхностная копия: " << m_name << "\n";
 }
 
+// 2. Конструктор перемещения
 FormulaColumn::FormulaColumn(FormulaColumn&& other) noexcept
-    : BaseColumn{ std::move(other) }       // перемещаем базу
-    , m_formula{ std::move(other.m_formula) } // перемещаем умный указатель
+    : BaseColumn{ std::move(other) }
+    , m_strategy{ std::move(other.m_strategy) }
 {
     std::cout << "[FormulaColumn] Перемещение: " << m_name << "\n";
 }
 
+// 3. Оператор копирующего присваивания (ПОВЕРХНОСТНАЯ КОПИЯ)
 FormulaColumn& FormulaColumn::operator=(const FormulaColumn& other) {
     if (this == &other) return *this; // защита от самоприсваивания
     
-    BaseColumn::operator=(other); // вызываем присваивание базы!
-    m_formula = other.m_formula;  // копируем shared_ptr
+    BaseColumn::operator=(other); // копируем базу
+    m_strategy = other.m_strategy; // копируем shared_ptr
     
     std::cout << "[FormulaColumn] Присваивание (копия): " << m_name << "\n";
     return *this;
 }
 
+// 4. Оператор перемещающего присваивания
 FormulaColumn& FormulaColumn::operator=(FormulaColumn&& other) noexcept {
-    if (this == &other) return *this; // защита от самоприсваивания
+    if (this == &other) return *this;
     
-    BaseColumn::operator=(std::move(other)); // перемещаем базу!
-    m_formula = std::move(other.m_formula);  // перемещаем shared_ptr
+    BaseColumn::operator=(std::move(other));
+    m_strategy = std::move(other.m_strategy);
     
     std::cout << "[FormulaColumn] Присваивание (перемещение): " << m_name << "\n";
     return *this;
 }
 
+// 5. Деструктор
 FormulaColumn::~FormulaColumn() {
     std::cout << "[FormulaColumn] Уничтожена: " << m_name << "\n";
 }
@@ -59,34 +62,40 @@ std::string FormulaColumn::GetType() const {
 }
 
 std::string FormulaColumn::Describe() const {
-    // без вызова базы
-    return "Формула: " + m_name + " = " + m_formula->GetExpression();
+    if (m_strategy) {
+        return "Формула: " + m_name + " = " + m_strategy->GetView();
+    }
+    return "Формула: " + m_name + " (нет стратегии)";
 }
 
+// ГЛУБОКАЯ КОПИЯ через Clone()
 std::unique_ptr<BaseColumn> FormulaColumn::Clone() const {
-    // СОЗДАЕМ НОВУЮ ФОРМУЛУ (глубокая копия)
-    // Копируем данные из старой формулы в новую
-    auto newFormula = std::make_shared<Formula>(
-        m_formula->GetName(), 
-        m_formula->GetExpression()
-    );
+    auto newStrategy = m_strategy ? m_strategy->Clone() : nullptr;
     
-    // Возвращаем новую колонку с НОВОЙ формулой
-    return std::make_unique<FormulaColumn>(
-        m_name, m_var, m_precision, newFormula
+    auto copy = std::make_unique<FormulaColumn>(
+        m_name, m_var, m_precision, std::shared_ptr<IEvaluationStrategy>(std::move(newStrategy))
     );
+    copy->SetData(GetData());
+    return copy;
+}
+
+void FormulaColumn::SetStrategy(std::shared_ptr<IEvaluationStrategy> strategy) {
+    m_strategy = std::move(strategy);
+    std::cout << "[FormulaColumn] Стратегия изменена для " << m_name << "\n";
 }
 
 void FormulaColumn::Calculate() {
-    std::cout << "[FormulaColumn] Calculate для: " << m_name << "\n";
-}
-
-void FormulaColumn::SetFormula(std::shared_ptr<Formula> formula) {
-    m_formula = formula;
-}
-
-std::shared_ptr<Formula> FormulaColumn::GetFormula() const {
-    return m_formula;
+    if (!m_strategy) {
+        std::cout << "[FormulaColumn] Ошибка: нет стратегии для " << m_name << "\n";
+        return;
+    }
+    
+    std::map<std::string, double> vars; 
+    double result = m_strategy->Evaluate(vars);
+    m_isCalculated = true;
+    
+    std::cout << "[FormulaColumn] " << m_name 
+              << " (" << m_strategy->GetView() << ") = " << result << "\n";
 }
 
 } // namespace lab_comps

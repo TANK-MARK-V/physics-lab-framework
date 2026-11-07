@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <string>
+#include <memory>
 
 namespace lab_comps {
 
@@ -13,6 +14,9 @@ public:
     
     // Получить строковое представление (для вывода)
     virtual std::string GetView() const = 0; 
+    
+    // Для глубокой копии
+    virtual std::unique_ptr<IEvaluationStrategy> Clone() const = 0;
 };
 
 } // namespace lab_comps

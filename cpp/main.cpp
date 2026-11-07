@@ -2,7 +2,8 @@
 #include "input_column.hpp"
 #include "formula_column.hpp"
 #include "constant_column.hpp"
-#include "formula.hpp"
+#include "strategies.hpp"
+#include "exceptions.hpp"
 
 #include <iostream>
 #include <memory>
@@ -19,96 +20,77 @@ int main() {
     setlocale(LC_ALL, "ru_RU.UTF-8");
 #endif
 
-    std::cout << "=== ЛР-4: Наследование ===\n\n";
+    std::cout << "=== ЛР-5: Полиморфизм, интерфейсы, исключения ===\n\n";
 
-    // ========== 1. СОЗДАНИЕ ОБЪЕКТОВ ==========
-    std::cout << "--- 1. Создание объектов ---\n";
-    auto formula = std::make_shared<Formula>("Скорость", "a t");
-
+    // ========== 1. ИНТЕРФЕЙС ICalculable ==========
+    std::cout << "--- 1. Интерфейс ICalculable ---\n";
+    
     std::vector<std::unique_ptr<BaseColumn>> columns;
     columns.push_back(std::make_unique<InputColumn>("a", "a", 2));
     columns.push_back(std::make_unique<InputColumn>("t", "t", 2));
-    columns.push_back(std::make_unique<FormulaColumn>("v", "v", 2, formula));
+    
+    // Формула
+    columns.push_back(std::make_unique<FormulaColumn>(
+        "v", "v", 2, std::make_unique<FormulaEvaluation>("a t")));
+    
+    // Сумма
+    columns.push_back(std::make_unique<FormulaColumn>(
+        "sum", "sum", 2, std::make_unique<SumEvaluation>()));
+    
+    // Константа
     columns.push_back(std::make_unique<ConstantColumn>("g", "g", 2, 9.8));
 
-    // ========== 2. ВИРТУАЛЬНЫЙ ДЕСТРУКТОР ==========
-    std::cout << "\n--- 2. Уничтожение через указатель на базу ---\n";
-    {
-        std::unique_ptr<BaseColumn> col = std::make_unique<FormulaColumn>(
-            "test", "test", 2, formula);
-        // при reset() вызовется ~FormulaColumn(), потом ~BaseColumn()
+    // ========== 2. МНОЖЕСТВЕННОЕ НАСЛЕДОВАНИЕ ==========
+    std::cout << "\n--- 2. Множественное наследование (BaseColumn + ICalculable) ---\n";
+    for (const auto& col : columns) {
+        if (auto* calc = dynamic_cast<ICalculable*>(col.get())) {
+            std::cout << "Колонка " << col->GetName() << " реализует ICalculable\n";
+        } else {
+            std::cout << "Колонка " << col->GetName() << " НЕ реализует ICalculable\n";
+        }
     }
 
-    // ========== 3. КОПИРОВАНИЕ ==========
-    std::cout << "\n--- 3. Копирование ---\n";
-
-    // 1. Создаем оригинал с формулой "a t"
-    auto original = std::make_unique<FormulaColumn>("v", "v", 2, formula);
-    original->SetData({1.0, 2.0, 3.0});
-
-    // 2. Поверхностное копирование (делит shared_ptr)
-    FormulaColumn shallowCopy = *original;
-
-    // 3. Глубокое копирование (создает свою формулу через Clone)
-    auto deepCopy = original->Clone();
-
-    // 4. МЕНЯЕМ ДАННЫЕ ВНУТРИ ФОРМУЛЫ У ОРИГИНАЛА (через SetExpression)
-    // Теперь формула у оригинала = "x y", но объект тот же самый
-    original->GetFormula()->SetExpression("x y");
-
-    // 5. ПРОВЕРЯЕМ
-    std::cout << "\n--- 3.1. Поверхностное (делит формулу) ---\n";
-    std::cout << "original: " << original->Describe() << "\n";
-    std::cout << "shallow:  " << shallowCopy.Describe() << "\n";
-    // ОБА покажут "x y" потому что shallowCopy смотрит на ТУ ЖЕ формулу, 
-    // которую только что изменили через original
-
-    std::cout << "\n--- 3.2. Глубокое (своя формула) ---\n";
-    std::cout << "original: " << original->Describe() << "\n";
-    std::cout << "deep:     " << deepCopy->Describe() << "\n";
-    // deep покажет "a t" потому что Clone() создал НОВУЮ формулу, 
-    // и когда мы меняли "x y" у оригинала, deep об этом не знал
-
-    // ========== 4. СТАТИЧЕСКИЙ СЧЁТЧИК ==========
-    std::cout << "\n--- 4. Статический счётчик ---\n";
-    for (auto& col : columns) {
-        std::cout << "ID: " << col->GetId() 
-                  << ", Type: " << col->GetType()
-                  << ", Name: " << col->GetName() << "\n";
-    }
-
-    // ========== 5. ПОЛИМОРФИЗМ ==========
-    std::cout << "\n--- 5. Полиморфизм ---\n";
-    for (auto& col : columns) {
-        col->Calculate();
-        std::cout << col->Describe() << "\n";
-    }
-
-    // ========== 6. СТРОКИ ==========
-    std::cout << "\n--- 6. Строки ---\n";
-    std::string fullName = "v" + std::string(" (скорость)");
-    std::cout << "Конкатенация: " << fullName << "\n";
-    if (fullName.find("скорость") != std::string::npos) {
-        std::cout << "Поиск: найдено\n";
-    }
-    std::cout << "Подстрока: " << fullName.substr(0, 3) << "\n";
+    // ========== 3. РАННЕЕ И ПОЗДНЕЕ СВЯЗЫВАНИЕ ==========
+    std::cout << "\n--- 3. Раннее и позднее связывание ---\n";
+    std::unique_ptr<BaseColumn> basePtr = std::make_unique<FormulaColumn>(
+        "test", "test", 2, std::make_unique<SimpleEvaluation>());
     
-    if (fullName == "v (скорость)") {
-        std::cout << "Сравнение: равны\n";
+    std::cout << "Невиртуальный метод (раннее): " << basePtr->GetName() << "\n";
+    std::cout << "Виртуальный метод (позднее): " << basePtr->Describe() << "\n";
+
+    // ========== 4. ПРОВЕРКА ТИПА (dynamic_cast) ==========
+    std::cout << "\n--- 4. dynamic_cast: вычисляем только ICalculable ---\n";
+    for (const auto& col : columns) {
+        if (auto* calc = dynamic_cast<ICalculable*>(col.get())) {
+            std::cout << "Вычисляем " << col->GetName() << ":\n";
+            calc->Calculate();
+        } else {
+            std::cout << col->GetName() << ": не требует вычисления\n";
+        }
     }
 
-     // ========== 7. THIS: ПЕРЕДАЧА ТЕКУЩЕГО ОБЪЕКТА ==========
-    std::cout << "\n--- 7. this: передача текущего объекта ---\n";
+    // ========== 5. ДИНАМИЧЕСКОЕ КОНФИГУРИРОВАНИЕ ==========
+    std::cout << "\n--- 5. Динамическое конфигурирование ---\n";
+    auto dynamicCol = std::make_unique<FormulaColumn>(
+        "dyn", "dyn", 2, std::make_unique<SimpleEvaluation>());
     
-    std::vector<BaseColumn*> registry;
-    for (auto& col : columns) {
-        col->AddToRegistry(registry);  // ← передача *this
+    std::cout << "Стратегия 1:\n";
+    dynamicCol->Calculate();
+    
+    std::cout << "Меняем на SumEvaluation:\n";
+    dynamicCol->SetStrategy(std::make_unique<SumEvaluation>());
+    dynamicCol->Calculate();
+
+    // ========== 6. ИСКЛЮЧЕНИЯ ==========
+    std::cout << "\n--- 6. Исключения ---\n";
+    try {
+        auto badCol = std::make_unique<InputColumn>("bad", "bad", -5);
+    } 
+    catch (const InvalidPrecisionError& e) {
+        std::cout << "Поймано частное исключение: " << e.what() << "\n";
     }
-    
-    std::cout << "Зарегистрировано колонок: " << registry.size() << "\n";
-    for (auto* col : registry) {
-        std::cout << "  → " << col->GetName() 
-                  << " (тип: " << col->GetType() << ")\n";
+    catch (const std::exception& e) {
+        std::cout << "Поймано общее: " << e.what() << "\n";
     }
 
     std::cout << "\n=== КОНЕЦ ===\n";
