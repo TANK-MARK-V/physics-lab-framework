@@ -6,25 +6,25 @@
 
 namespace lab_comps {
 
-class Column;
+class BaseColumn;
 
 class TableCalculator {
 private:
     int m_experiments;
-    std::vector<Column*> m_readyCols;    // Агрегация
-    std::vector<Column*> m_pendingCols;  // Агрегация
-    std::map<std::string, bool> m_varsStates;  // Кэш
+    std::vector<BaseColumn*> m_readyCols;
+    std::vector<BaseColumn*> m_pendingCols;
+    std::map<std::string, bool> m_varsStates;
 
 public:
     TableCalculator() = delete;
     TableCalculator(int experiments);
     ~TableCalculator();
 
-    void AddCol(Column* col);
+    void AddCol(BaseColumn* col);
     bool TryCalculate();
 
 private:
-    bool CanCalculate(Column* col) const;
+    bool CanCalculate(BaseColumn* col) const;
 };
 
 } // namespace lab_comps

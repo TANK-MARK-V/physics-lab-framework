@@ -41,6 +41,12 @@ void Formula::ParseExpression() {
     }
 }
 
+void Formula::SetExpression(const std::string& expression) {
+    m_expression = expression;
+    m_postfix.clear();
+    ParseExpression();
+}
+
 double Formula::Evaluate(const std::map<std::string, double>& vars) const {
     // TODO: реальный парсер
     return 42.0;

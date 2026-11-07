@@ -1,10 +1,12 @@
 #include "table.hpp"
-#include "column.hpp"
+#include "base_column.hpp"
+#include "input_column.hpp"
+#include "formula_column.hpp"
+#include "constant_column.hpp"
 #include "formula.hpp"
 #include "table_calculator.hpp"
 
 #include <iostream>
-#include <memory>
 
 namespace lab_comps {
 
@@ -34,21 +36,22 @@ int Table::GetExperiments() const {
     return m_experiments;
 }
 
-const std::vector<std::unique_ptr<Column>>& Table::GetColumns() const {
+const std::vector<std::unique_ptr<BaseColumn>>& Table::GetColumns() const {
     return m_columns;
 }
 
-void Table::CreateColumn(const std::string& name, const std::string& var, int precision) {
-    m_columns.push_back(std::make_unique<Column>(name, var, precision));
-    std::cout << "[Table] Добавлена колонка: " << name << "\n";
+void Table::CreateInputColumn(const std::string& name, const std::string& var, int precision) {
+    m_columns.push_back(std::make_unique<InputColumn>(name, var, precision));
 }
 
-void Table::CreateColumn(const std::string& name, const std::string& var, 
-                         int precision, std::shared_ptr<Formula> formula) {
-    auto col = std::make_unique<Column>(name, var, precision);
-    col->SetFormula(formula);
-    m_columns.push_back(std::move(col));
-    std::cout << "[Table] Добавлена колонка с формулой: " << name << "\n";
+void Table::CreateFormulaColumn(const std::string& name, const std::string& var, 
+                                int precision, std::shared_ptr<Formula> formula) {
+    m_columns.push_back(std::make_unique<FormulaColumn>(name, var, precision, formula));
+}
+
+void Table::CreateConstantColumn(const std::string& name, const std::string& var,
+                                 int precision, double value) {
+    m_columns.push_back(std::make_unique<ConstantColumn>(name, var, precision, value));
 }
 
 void Table::SetColumnData(const std::string& var, const std::vector<double>& data) {
@@ -63,7 +66,7 @@ void Table::SetColumnData(const std::string& var, const std::vector<double>& dat
 void Table::Calculate() {
     TableCalculator calc(m_experiments);
     for (auto& col : m_columns) {
-        calc.AddCol(col.get());
+        calc.AddCol(col.get());  // ← BaseColumn*
     }
     calc.TryCalculate();
 }

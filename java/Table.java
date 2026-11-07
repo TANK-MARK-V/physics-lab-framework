@@ -3,35 +3,30 @@ import java.util.*;
 public class Table {
     private String name;
     private int experiments;
-    private final List<Column> columns = new ArrayList<>();
+    private final List<BaseColumn> columns = new ArrayList<>();
 
     public Table(String name, int experiments) {
         this.name = name;
         this.experiments = experiments;
-        System.out.println("[+] Table создана: " + name);
+        System.out.println("[+] Table создана: " + this.name);
     }
 
-    public String getName() { return name; }
-    public int getExperiments() { return experiments; }
-    public List<Column> getColumns() { return columns; }
+    public List<BaseColumn> getColumns() { return columns; }
 
-    public void setName(String name) { this.name = name; }
-    public void setExperiments(int experiments) { this.experiments = experiments; }
-
-    // Композиция: Table сам создаёт колонку (без формулы)
-    public void createColumn(String name, String var, int precision) {
-        columns.add(new Column(name, var, precision));
+    public void createInputColumn(String name, String var, int precision) {
+        columns.add(new InputColumn(name, var, precision));
     }
 
-    // Агрегация: формула создана СНАРУЖИ и передаётся
-    public void createColumn(String name, String var, int precision, Formula formula) {
-        Column col = new Column(name, var, precision);
-        col.setFormula(formula);
-        columns.add(col);
+    public void createConstantColumn(String name, String var, int precision, double value) {
+        columns.add(new ConstantColumn(name, var, precision, value));
+    }
+
+    public void createFormulaColumn(String name, String var, int precision, Formula formula) {
+        columns.add(new FormulaColumn(name, var, precision, formula));
     }
 
     public void setColumnData(String var, double[] data) {
-        for (Column col : columns) {
+        for (BaseColumn col : columns) {
             if (col.getVar().equals(var)) {
                 col.setData(data);
                 return;
@@ -41,15 +36,10 @@ public class Table {
 
     public void calculate() {
         try (TableCalculator calc = new TableCalculator(experiments)) {
-            for (Column col : columns) {
-                calc.addCol(col);
+            for (BaseColumn col : columns) {
+                calc.addCol(col); // Теперь принимает BaseColumn
             }
             calc.tryCalculate();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "Table: " + name + " (" + experiments + " опытов)";
     }
 }
