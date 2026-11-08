@@ -20,7 +20,9 @@ class SumEvaluation : public IEvaluationStrategy {
 public:
     double Evaluate(const std::map<std::string, double>& vars) const override {
         double sum = 0.0;
-        for (const auto& [name, value] : vars) sum += value;
+        for (const auto& kv : vars) {
+            sum += kv.second;
+        }
         return sum;
     }
     

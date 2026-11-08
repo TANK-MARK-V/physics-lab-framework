@@ -27,7 +27,7 @@ public:
     // Создание колонок разных типов
     void CreateInputColumn(const std::string& name, const std::string& var, int precision);
     void CreateFormulaColumn(const std::string& name, const std::string& var,
-                             int precision, std::shared_ptr<IEvaluationStrategy> strategy);
+                             int precision, std::unique_ptr<IEvaluationStrategy> strategy);
     void CreateConstantColumn(const std::string& name, const std::string& var,
                               int precision, double value);
 

@@ -7,19 +7,19 @@
 namespace lab_comps {
 
 FormulaColumn::FormulaColumn(std::string name, std::string var, int precision, 
-                             std::shared_ptr<IEvaluationStrategy> strategy)
+                             std::unique_ptr<IEvaluationStrategy> strategy)
     : BaseColumn{ std::move(name), std::move(var), precision }
     , m_strategy{ std::move(strategy) }
 {
     std::cout << "[FormulaColumn] Создана\n";
 }
 
-// 1. Конструктор копирования (ПОВЕРХНОСТНАЯ КОПИЯ)
+// 1. Конструктор копирования (ГЛУБОКАЯ КОПИЯ через Clone)
 FormulaColumn::FormulaColumn(const FormulaColumn& other)
-    : BaseColumn{ other } // копируем базу
-    , m_strategy{ other.m_strategy } // копируем shared_ptr (делим стратегию)
+    : BaseColumn{ other }
+    , m_strategy{ other.m_strategy ? other.m_strategy->Clone() : nullptr }
 {
-    std::cout << "[FormulaColumn] Поверхностная копия: " << m_name << "\n";
+    std::cout << "[FormulaColumn] Копия: " << m_name << "\n";
 }
 
 // 2. Конструктор перемещения
@@ -30,12 +30,12 @@ FormulaColumn::FormulaColumn(FormulaColumn&& other) noexcept
     std::cout << "[FormulaColumn] Перемещение: " << m_name << "\n";
 }
 
-// 3. Оператор копирующего присваивания (ПОВЕРХНОСТНАЯ КОПИЯ)
+// 3. Оператор копирующего присваивания
 FormulaColumn& FormulaColumn::operator=(const FormulaColumn& other) {
-    if (this == &other) return *this; // защита от самоприсваивания
+    if (this == &other) return *this;
     
     BaseColumn::operator=(other); // копируем базу
-    m_strategy = other.m_strategy; // копируем shared_ptr
+   m_strategy = other.m_strategy ? other.m_strategy->Clone() : nullptr;
     
     std::cout << "[FormulaColumn] Присваивание (копия): " << m_name << "\n";
     return *this;
@@ -73,13 +73,13 @@ std::unique_ptr<BaseColumn> FormulaColumn::Clone() const {
     auto newStrategy = m_strategy ? m_strategy->Clone() : nullptr;
     
     auto copy = std::make_unique<FormulaColumn>(
-        m_name, m_var, m_precision, std::shared_ptr<IEvaluationStrategy>(std::move(newStrategy))
+        m_name, m_var, m_precision, std::move(newStrategy)
     );
     copy->SetData(GetData());
     return copy;
 }
 
-void FormulaColumn::SetStrategy(std::shared_ptr<IEvaluationStrategy> strategy) {
+void FormulaColumn::SetStrategy(std::unique_ptr<IEvaluationStrategy> strategy) {
     m_strategy = std::move(strategy);
     std::cout << "[FormulaColumn] Стратегия изменена для " << m_name << "\n";
 }

@@ -44,8 +44,8 @@ void Table::CreateInputColumn(const std::string& name, const std::string& var, i
     m_columns.push_back(std::make_unique<InputColumn>(name, var, precision));
 }
 
-void Table::CreateFormulaColumn(const std::string& name, const std::string& var,
-                                int precision, std::shared_ptr<IEvaluationStrategy> strategy) {
+void Table::CreateFormulaColumn(const std::string& name, const std::string& var, 
+                                int precision, std::unique_ptr<IEvaluationStrategy> strategy) {
     m_columns.push_back(std::make_unique<FormulaColumn>(name, var, precision, std::move(strategy)));
 }
 
