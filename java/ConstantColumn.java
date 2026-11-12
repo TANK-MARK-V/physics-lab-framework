@@ -1,5 +1,6 @@
-public final class ConstantColumn extends BaseColumn { // final — запрет наследования
+public final class ConstantColumn extends BaseColumn implements Calculable {
     private double value;
+    private boolean isCalculated = false;
 
     public ConstantColumn(String name, String var, int precision, double value) {
         super(name, var, precision);
@@ -23,21 +24,26 @@ public final class ConstantColumn extends BaseColumn { // final — запрет
         return new ConstantColumn(this.name, this.var, this.precision, this.value);
     }
 
+    // Реализация Calculable
+    @Override
+    public void calculate() {
+        isCalculated = true;
+        System.out.println("[ConstantColumn] " + name + " = " + value);
+    }
+
+    @Override
+    public boolean isCalculated() {
+        return isCalculated;
+    }
+
     @Override
     public boolean equals(Object o) {
-    // 1. Проверка на тот же самый объект (this)
-    if (this == o) return true;
-    
-    // 2. Проверка на null и тип
-    if (o == null || getClass() != o.getClass()) return false;
-    
-    // 3. Приведение типа и сравнение по содержимому
-    ConstantColumn that = (ConstantColumn) o;
-    
-    // Сравниваем имя, переменную и значение
-    return Double.compare(that.value, value) == 0 &&
-            name.equals(that.name) &&
-            var.equals(that.var);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConstantColumn that = (ConstantColumn) o;
+        return Double.compare(that.value, value) == 0 &&
+                name.equals(that.name) &&
+                var.equals(that.var);
     }
 
     @Override

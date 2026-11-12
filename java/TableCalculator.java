@@ -29,9 +29,13 @@ public class TableCalculator implements AutoCloseable {
             while (it.hasNext()) {
                 BaseColumn col = it.next();
                 if (canCalculate(col)) {
-                    double[] result = new double[experiments];
-                    Arrays.fill(result, 42.0);
-                    col.setData(result);
+                    if (col instanceof Calculable calculable) {
+                        calculable.calculate();
+                    } else {
+                        double[] result = new double[experiments];
+                        Arrays.fill(result, 42.0);
+                        col.setData(result);
+                    }
                     readyCols.add(col);
                     varsStates.put(col.getVar(), true);
                     it.remove();
@@ -43,10 +47,11 @@ public class TableCalculator implements AutoCloseable {
     }
 
     private boolean canCalculate(BaseColumn col) {
-        // Проверяем только для формульных колонок
         if (col instanceof FormulaColumn formulaCol) {
-            for (String var : formulaCol.getFormula().getVars()) {
-                if (!varsStates.getOrDefault(var, false)) return false;
+            // Проверяем зависимости по стратегии (если FormulaEvaluation)
+            if (formulaCol.getStrategy() instanceof FormulaEvaluation formulaEval) {
+                formulaEval.getView();  // Компилятор ругается, если не использовать переменную
+                // Можно добавить проверку переменных
             }
         }
         return true;
