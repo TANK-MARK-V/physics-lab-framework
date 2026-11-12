@@ -25,7 +25,13 @@ std::string ConstantColumn::Describe() const {
 }
 
 std::unique_ptr<BaseColumn> ConstantColumn::Clone() const {
-    return std::make_unique<ConstantColumn>(*this);
+    return std::make_unique<ConstantColumn>(m_name, m_var, m_precision, m_value);
+}
+
+void ConstantColumn::Calculate() {
+    // Константа уже "посчитана" по своей сути
+    m_isCalculated = true;
+    std::cout << "[ConstantColumn] " << m_name << " = " << m_value << "\n";
 }
 
 } // namespace lab_comps

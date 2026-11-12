@@ -66,24 +66,16 @@ void BaseColumn::Calculate() {
 }
 
 std::string BaseColumn::Describe() const {
-    // std::string: конкатенация
     std::string result = m_var + " (" + m_name + ")";
-    
-    // std::string: find
     if (m_name.find("temp") != std::string::npos) {
         result += " [временная]";
     }
-    
     return result;
 }
 
 void BaseColumn::SetPrecision(int precision) {
     m_precision = precision;
     ValidatePrecision();
-}
-
-void BaseColumn::AddToRegistry(std::vector<BaseColumn*>& registry) {
-    registry.push_back(this);  // передача *this
 }
 
 } // namespace lab_comps

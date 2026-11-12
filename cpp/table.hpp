@@ -1,13 +1,13 @@
 #pragma once
 
+#include "base_column.hpp"
+#include "ievaluation_strategy.hpp"
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace lab_comps {
 
-class BaseColumn;
-class Formula;
 
 class Table {
 private:
@@ -26,8 +26,8 @@ public:
 
     // Создание колонок разных типов
     void CreateInputColumn(const std::string& name, const std::string& var, int precision);
-    void CreateFormulaColumn(const std::string& name, const std::string& var, 
-                             int precision, std::shared_ptr<Formula> formula);
+    void CreateFormulaColumn(const std::string& name, const std::string& var,
+                             int precision, std::unique_ptr<IEvaluationStrategy> strategy);
     void CreateConstantColumn(const std::string& name, const std::string& var,
                               int precision, double value);
 
