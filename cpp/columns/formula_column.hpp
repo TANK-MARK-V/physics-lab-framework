@@ -2,7 +2,7 @@
 
 #include "base_column.hpp"
 #include "icalculable.hpp"
-#include "ievaluation_strategy.hpp"
+#include "../strategies/ievaluation_strategy.hpp"
 #include <memory>
 
 namespace lab_comps {

@@ -1,5 +1,5 @@
 #include "table_calculator.hpp"
-#include "base_column.hpp"
+#include "../columns/base_column.hpp"
 
 #include <iostream>
 

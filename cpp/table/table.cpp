@@ -1,9 +1,9 @@
 #include "table.hpp"
-#include "base_column.hpp"
-#include "input_column.hpp"
-#include "formula_column.hpp"
-#include "constant_column.hpp"
-#include "ievaluation_strategy.hpp"
+#include "../columns/base_column.hpp"
+#include "../columns/input_column.hpp"
+#include "../columns/formula_column.hpp"
+#include "../columns/constant_column.hpp"
+#include "../strategies/ievaluation_strategy.hpp"
 #include "table_calculator.hpp"
 
 #include <iostream>

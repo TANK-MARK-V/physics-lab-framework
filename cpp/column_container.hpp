@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <concepts>
-#include "base_column.hpp"
+#include "columns/base_column.hpp"
 
 namespace lab_comps {
 

@@ -37,7 +37,7 @@
 ## Сборка и запуск
 
 ### **C++:**
-g++ -std=c++20 -Wall -Wextra *.cpp -o app
+g++ -std=c++20 -Wall -Wextra main.cpp physical_quantity.cpp columns/*.cpp table/*.cpp -o app.exe
 app.exe
 
 ### **Java:**

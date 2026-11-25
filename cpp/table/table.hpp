@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base_column.hpp"
-#include "ievaluation_strategy.hpp"
+#include "../columns/base_column.hpp"
+#include "../strategies/ievaluation_strategy.hpp"
 #include <string>
 #include <vector>
 #include <memory>

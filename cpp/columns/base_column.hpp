@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <ostream> // Добавлено для std::ostream
-#include "exceptions.hpp"
+#include "../exceptions.hpp"
 
 namespace lab_comps {
 
