@@ -6,6 +6,7 @@
 #include "strategies.hpp"
 #include "exceptions.hpp"
 #include "physical_quantity.hpp"
+#include "calculations.hpp"
 
 #include <iostream>
 #include <memory>
@@ -65,6 +66,27 @@ int main() {
     if (colById) {
         std::cout << "Найдено по ID(" << targetId << "): " << *colById << "\n";
     }
+
+    // =====================================================================
+    // ШАБЛОННАЯ ФУНКЦИЯ С КОНЦЕПТОМ
+    // =====================================================================
+    std::cout << "\n--- Шаблонная функция Average ---\n";
+    
+    // Вызов с int
+    std::vector<int> ints = {1, 2, 3, 4, 5};
+    std::cout << "Среднее (int): " << Average(ints) << "\n";
+    
+    // Вызов с double
+    std::vector<double> doubles = {1.5, 2.5, 3.5};
+    std::cout << "Среднее (double): " << Average(doubles) << "\n";
+    
+    // Вызов с float
+    std::vector<float> floats = {1.0f, 2.0f, 3.0f};
+    std::cout << "Среднее (float): " << Average(floats) << "\n";
+
+    // Демонстрация того, что концепт работает (этот код не скомпилируется, если раскомментировать):
+    // std::vector<std::string> strings = {"a", "b"};
+    // std::cout << Average(strings); // Ошибка компиляции: std::string не является Numeric
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;

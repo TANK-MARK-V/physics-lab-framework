@@ -47,7 +47,7 @@ bool TableCalculator::TryCalculate() {
     return m_pendingCols.empty();
 }
 
-bool TableCalculator::CanCalculate(BaseColumn* col) const {
+bool TableCalculator::CanCalculate(BaseColumn*) const {
     // Пока заглушка: просто проверяем зависимости по формуле
     return true;
 }
