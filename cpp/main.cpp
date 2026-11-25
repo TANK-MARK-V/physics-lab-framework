@@ -7,6 +7,7 @@
 #include "exceptions.hpp"
 #include "physical_quantity.hpp"
 #include "calculations.hpp"
+#include "column_container.hpp"
 
 #include <iostream>
 #include <memory>
@@ -87,6 +88,32 @@ int main() {
     // Демонстрация того, что концепт работает (этот код не скомпилируется, если раскомментировать):
     // std::vector<std::string> strings = {"a", "b"};
     // std::cout << Average(strings); // Ошибка компиляции: std::string не является Numeric
+
+    // =====================================================================
+    // ШАБЛОННЫЙ КЛАСС ColumnContainer И ШАБЛОННЫЙ МЕТОД
+    // =====================================================================
+    std::cout << "\n--- Шаблонный класс ColumnContainer ---\n";
+
+    // Создаем контейнер для конкретных колонок ввода
+    ColumnContainer<InputColumn> inputContainer;
+    inputContainer.Add(std::make_unique<InputColumn>("alpha", "alpha", 2));
+    inputContainer.Add(std::make_unique<InputColumn>("beta", "beta", 2));
+    
+    // Создаем общий контейнер для BaseColumn
+    ColumnContainer<BaseColumn> allContainer;
+    allContainer.Add(std::make_unique<ConstantColumn>("g", "g", 2, 9.81));
+
+    // Демонстрация шаблонного метода MergeFrom
+    // Переливаем колонки из inputContainer (U = InputColumn) в allContainer (T = BaseColumn)
+    allContainer.MergeFrom(inputContainer);
+
+    std::cout << "Размер общего контейнера: " << allContainer.Size() << "\n";
+    for (std::size_t i = 0; i < allContainer.Size(); ++i) {
+        std::cout << "  Элемент [" << i << "]: " << allContainer[i] << "\n";
+    }
+
+    // Демонстрация того, что концепт работает (если раскомментировать, будет ошибка компиляции):
+    // ColumnContainer<int> invalidContainer; // Ошибка: int не является наследником BaseColumn
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;
