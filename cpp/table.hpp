@@ -8,7 +8,6 @@
 
 namespace lab_comps {
 
-
 class Table {
 private:
     std::string m_name;
@@ -36,6 +35,10 @@ public:
 
     // Расчёт
     void Calculate();
+
+    // ПЕРЕГРУЗКА ФУНКЦИЙ: поиск колонки по имени переменной (var) и по ID
+    [[nodiscard]] BaseColumn* FindColumn(const std::string& var) const;
+    [[nodiscard]] BaseColumn* FindColumn(int id) const;
 };
 
 } // namespace lab_comps

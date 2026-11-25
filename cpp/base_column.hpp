@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <ostream> // Добавлено для std::ostream
 #include "exceptions.hpp"
 
 namespace lab_comps {
@@ -57,8 +58,12 @@ public:
     void SetData(const std::vector<double>& data) { m_data = data; }
     void SetPrecision(int precision);
     void SetName(const std::string& name) { m_name = name; }
-
-    // Удалён AddToRegistry (больше не нужен)
 };
+
+// Свободная функция для вывода любой колонки в поток.
+// Внутри вызывает виртуальный Describe(), поэтому выведется описание нужного типа.
+inline std::ostream& operator<<(std::ostream& out, const BaseColumn& col) {
+    return out << col.Describe();
+}
 
 } // namespace lab_comps

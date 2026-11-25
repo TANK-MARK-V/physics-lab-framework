@@ -37,7 +37,7 @@
 ## Сборка и запуск
 
 ### **C++:**
-g++ -Wno-attributes *.cpp -o app.exe
+g++ -std=c++20 -Wall -Wextra *.cpp -o app
 app.exe
 
 ### **Java:**

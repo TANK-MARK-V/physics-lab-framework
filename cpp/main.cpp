@@ -1,3 +1,4 @@
+#include "table.hpp"
 #include "base_column.hpp"
 #include "input_column.hpp"
 #include "formula_column.hpp"
@@ -39,6 +40,31 @@ int main() {
     std::cout << std::boolalpha; // Чтобы bool выводился как true/false
     std::cout << "q1 == q2: " << (q1 == q2) << "\n"; // Работает operator== (из <=>)
     std::cout << "q1 > q2:  " << (q1 > q2) << "\n";  // Работает operator> (из <=>)
+
+    // =====================================================================
+    // ПЕРЕГРУЗКА ФУНКЦИЙ И ДРУЖЕСТВЕННЫЙ ВЫВОД
+    // =====================================================================
+    std::cout << "\n--- 8. Перегрузка функций и вывод в поток ---\n";
+
+    // Создаем тестовую таблицу (предполагается, что Table уже умеет создавать колонки)
+    Table myTable("Тестовая", 3);
+    myTable.CreateInputColumn("Угол", "alpha", 2);
+    myTable.CreateConstantColumn("Гравитация", "g", 2, 9.81);
+
+    // Проверка перегрузки FindColumn по имени
+    BaseColumn* colByName = myTable.FindColumn("alpha");
+    if (colByName) {
+        // Проверка дружественного operator<<
+        std::cout << "Найдено по имени: " << *colByName << "\n";
+    }
+
+    // Проверка перегрузки FindColumn по ID
+    // (ID колонки "g" будет на 1 больше, чем ID колонки "alpha")
+    int targetId = colByName->GetId() + 1;
+    BaseColumn* colById = myTable.FindColumn(targetId);
+    if (colById) {
+        std::cout << "Найдено по ID(" << targetId << "): " << *colById << "\n";
+    }
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;

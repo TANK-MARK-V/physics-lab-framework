@@ -71,4 +71,23 @@ void Table::Calculate() {
     calc.TryCalculate();
 }
 
+// Реализация перегруженных функций поиска
+BaseColumn* Table::FindColumn(const std::string& var) const {
+    for (const auto& col : m_columns) {
+        if (col->GetVar() == var) {
+            return col.get();
+        }
+    }
+    return nullptr;
+}
+
+BaseColumn* Table::FindColumn(int id) const {
+    for (const auto& col : m_columns) {
+        if (col->GetId() == id) {
+            return col.get();
+        }
+    }
+    return nullptr;
+}
+
 } // namespace lab_comps
