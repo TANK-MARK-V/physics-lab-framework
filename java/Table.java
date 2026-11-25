@@ -21,8 +21,8 @@ public class Table {
         columns.add(new ConstantColumn(name, var, precision, value));
     }
 
-    public void createFormulaColumn(String name, String var, int precision, Formula formula) {
-        columns.add(new FormulaColumn(name, var, precision, formula));
+    public void createFormulaColumn(String name, String var, int precision, EvaluationStrategy strategy) {
+        columns.add(new FormulaColumn(name, var, precision, strategy));
     }
 
     public void setColumnData(String var, double[] data) {
@@ -37,7 +37,7 @@ public class Table {
     public void calculate() {
         try (TableCalculator calc = new TableCalculator(experiments)) {
             for (BaseColumn col : columns) {
-                calc.addCol(col); // Теперь принимает BaseColumn
+                calc.addCol(col);
             }
             calc.tryCalculate();
         }

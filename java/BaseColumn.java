@@ -1,4 +1,4 @@
-public abstract class BaseColumn {
+public abstract class BaseColumn implements Comparable<BaseColumn> {
     // protected: нужно наследникам, но не внешнему коду
     protected String name;
     protected String var;
@@ -20,14 +20,13 @@ public abstract class BaseColumn {
         this.id = nextId(); // Генерируем ID через статический метод
         this.name = name;
         this.var = var;
-        this.precision = checkPrecision(precision);
+        this.precision = checkPrecision(precision); // Может бросить исключение
         System.out.println("[BaseColumn] Создана: " + name + " (ID: " + id + ")");
     }
 
     protected int checkPrecision(int precision) {
         if (precision < 0) {
-            System.out.println("[!] Точность не может быть ниже нуля");
-            return 0;
+            throw new InvalidPrecisionException(precision); // Бросаем исключение
         }
         return precision;
     }
@@ -53,5 +52,11 @@ public abstract class BaseColumn {
     // final метод — запрещаем переопределять
     public final String getFullInfo() {
         return "ID=" + id + ", Type=" + getType() + ", Name=" + name;
+    }
+
+    // Реализация Comparable (сортировка по имени)
+    @Override
+    public int compareTo(BaseColumn other) {
+        return this.name.compareTo(other.name);
     }
 }
