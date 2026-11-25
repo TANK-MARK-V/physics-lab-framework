@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "exceptions.hpp"
 
 namespace lab_comps {
 
@@ -16,12 +17,12 @@ protected:
     // protected: нужен наследникам, но не внешнему коду
     void ValidatePrecision() {
         if (m_precision < 0) {
-            m_precision = 0;
+            throw InvalidPrecisionError(m_precision); // Теперь бросаем исключение
         }
     }
 
 private:
-    static int m_lastId;  // статический счётчик
+    static int m_lastId;  // Статический счётчик
     int m_id{ 0 };
 
 public:
@@ -57,8 +58,7 @@ public:
     void SetPrecision(int precision);
     void SetName(const std::string& name) { m_name = name; }
 
-    void AddToRegistry(std::vector<BaseColumn*>& registry);
-
+    // Удалён AddToRegistry (больше не нужен)
 };
 
 } // namespace lab_comps
