@@ -1,6 +1,6 @@
 public abstract class BaseColumn implements Comparable<BaseColumn> {
-    // protected: нужно наследникам, но не внешнему коду
-    protected String name;
+    // package-private (доступ в пределах пакета) — аналог дружественной функции
+    String name; 
     protected String var;
     protected int precision;
     protected double[] data;
@@ -37,7 +37,6 @@ public abstract class BaseColumn implements Comparable<BaseColumn> {
     public String getVar() { return var; }
     public int getPrecision() { return precision; }
     public double[] getData() { return data; }
-
     public void setData(double[] data) { this.data = data; }
 
     // Абстрактные методы — каждый наследник реализует по-своему
@@ -58,5 +57,10 @@ public abstract class BaseColumn implements Comparable<BaseColumn> {
     @Override
     public int compareTo(BaseColumn other) {
         return this.name.compareTo(other.name);
+    }
+    
+    @Override
+    public String toString() {
+        return describe(); // Аналог operator<<
     }
 }
