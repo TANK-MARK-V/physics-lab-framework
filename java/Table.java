@@ -8,7 +8,7 @@ public class Table {
     public Table(String name, int experiments) {
         this.name = name;
         this.experiments = experiments;
-        System.out.println("[+] Table создана: " + this.name);
+        System.out.println("[Table] Создана: " + this.name);
     }
 
     public List<BaseColumn> getColumns() { return columns; }
@@ -33,13 +33,19 @@ public class Table {
             }
         }
     }
-
-    public void calculate() {
-        try (TableCalculator calc = new TableCalculator(experiments)) {
-            for (BaseColumn col : columns) {
-                calc.addCol(col);
-            }
-            calc.tryCalculate();
+    
+    // ПЕРЕГРУЗКА МЕТОДОВ: поиск по var (String) и по id (int)
+    public BaseColumn findColumn(String var) {
+        for (BaseColumn col : columns) {
+            if (col.getVar().equals(var)) return col;
         }
+        return null;
+    }
+
+    public BaseColumn findColumn(int id) {
+        for (BaseColumn col : columns) {
+            if (col.getId() == id) return col;
+        }
+        return null;
     }
 }
