@@ -1,3 +1,4 @@
+package columns;
 public final class ConstantColumn extends BaseColumn implements Calculable {
     private double value;
     private boolean isCalculated = false;

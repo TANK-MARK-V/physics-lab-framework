@@ -1,3 +1,6 @@
+package columns;
+import exceptions.InvalidPrecisionException;
+
 public abstract class BaseColumn implements Comparable<BaseColumn> {
     // package-private (доступ в пределах пакета) — аналог дружественной функции
     String name; 

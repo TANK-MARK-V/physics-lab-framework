@@ -1,4 +1,11 @@
+package table;
 import java.util.*;
+
+import columns.BaseColumn;
+import columns.ConstantColumn;
+import columns.FormulaColumn;
+import columns.InputColumn;
+import strategies.EvaluationStrategy;
 
 public class Table {
     private String name;

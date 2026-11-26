@@ -1,4 +1,10 @@
+package table;
 import java.util.*;
+
+import columns.BaseColumn;
+import columns.Calculable;
+import columns.FormulaColumn;
+import strategies.FormulaEvaluation;
 
 public class TableCalculator implements AutoCloseable {
     private final int experiments;

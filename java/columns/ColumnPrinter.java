@@ -1,3 +1,4 @@
+package columns;
 public class ColumnPrinter {
     // Этот метод может обращаться к полю name напрямую, 
     // потому что мы в том же пакете (package-private).

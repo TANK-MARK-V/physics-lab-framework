@@ -1,4 +1,7 @@
 // T должен быть наследником BaseColumn
+
+import columns.BaseColumn;
+
 public class ColumnContainer<T extends BaseColumn> {
     private static final int MAX_SIZE = 128;
     private final Object[] items; // Используем Object[] для хранения любых наследников T
