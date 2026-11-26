@@ -41,5 +41,5 @@ g++ -Wno-attributes *.cpp -o app.exe
 app.exe
 
 ### **Java:**
-javac -d out *.java
+javac -d out Main.java
 java -cp out Main
