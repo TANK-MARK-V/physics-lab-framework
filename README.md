@@ -41,5 +41,5 @@ g++ -std=c++20 -Wall -Wextra main.cpp physical_quantity.cpp columns/*.cpp table/
 app.exe
 
 ### **Java:**
-javac -d out *.java
+javac -d out Main.java
 java -cp out Main

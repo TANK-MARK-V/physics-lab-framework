@@ -1,3 +1,4 @@
+package columns;
 public class InputColumn extends BaseColumn implements Calculable {
     private boolean isCalculated = false;
 

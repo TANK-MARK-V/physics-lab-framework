@@ -1,3 +1,6 @@
+package columns;
+import strategies.EvaluationStrategy;
+
 public class FormulaColumn extends BaseColumn implements Calculable {
     private EvaluationStrategy strategy;
     private boolean isCalculated = false;

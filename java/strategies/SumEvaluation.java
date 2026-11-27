@@ -1,3 +1,4 @@
+package strategies;
 import java.util.Map;
 
 public class SumEvaluation implements EvaluationStrategy {
