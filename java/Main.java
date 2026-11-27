@@ -1,106 +1,89 @@
 import columns.*;
-import strategies.*;
 import table.*;
-import exceptions.*;
-import java.util.Arrays;
+import demos.*;
+
+import java.util.*;
+
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== ЛР-6: Статический полиморфизм (Java) ===\n");
+        System.out.println("=== ЛР-7: Контейнеры, алгоритмы и лямбда-функции (Java) ===\n");
 
         // =====================================================================
-        // 1. ПЕРЕГРУЗКА МЕТОДОВ
+        // 1. КОНТЕЙНЕРЫ
         // =====================================================================
-        System.out.println("--- 1. Перегрузка методов (поиск в таблице) ---");
-        Table myTable = new Table("Тестовая таблица", 3);
+        System.out.println("--- 1. Контейнеры ---");
+
+        // 1.1. Массив T[] (аналог std::array)
+        Double[] studentCoeffs = {0.0, 12.7, 4.3, 3.18, 2.78};
+        System.out.println("Коэффициент Стьюдента для n=3: " + studentCoeffs[2]);
+
+        // 1.2. ArrayList в TableCalculator (аналог std::vector)
+        // Демонстрируем, что ArrayList используется для хранения колонок
+        try (TableCalculator calc = new TableCalculator(3)) {
+            InputColumn c1 = new InputColumn("Угол", "a", 2);
+            ConstantColumn c2 = new ConstantColumn("g", "g", 2, 9.81);
+            calc.addCol(c1);
+            calc.addCol(c2);
+            System.out.println("ArrayList в TableCalculator: Готовых = " + calc.getReadyCount() + 
+                               ", Ожидающих = " + calc.getPendingCount());
+        } // Здесь calc автоматически закроется, и предупреждение исчезнет
+
+        // 1.3. List.subList (аналог std::span)
+        // Передаем в average только часть массива (первые 4 элемента)
+        List<Double> sub = Arrays.asList(studentCoeffs).subList(1, 4);
+        System.out.println("SubList (коэффициенты для n=2,3,4): " + sub);
+        System.out.println("Среднее (subList): " + Calculations.average(sub.toArray(new Double[0])));
+
+        // 1.4. LinkedList и TreeMap в классе Table
+        Table myTable = new Table("Физика", 3);
         myTable.createInputColumn("Угол", "alpha", 2);
         myTable.createConstantColumn("Гравитация", "g", 2, 9.81);
+        myTable.insertColumnAt(1, new ConstantColumn("Пи", "pi", 2, 3.14));
 
-        // Поиск по var (String)
-        BaseColumn colByName = myTable.findColumn("alpha");
-        if (colByName != null) {
-            System.out.println("Найдено по имени: " + colByName);
-        }
-
-        // Поиск по id (int)
-        int targetId = colByName.getId() + 1;
-        BaseColumn colById = myTable.findColumn(targetId);
-        if (colById != null) {
-            System.out.println("Найдено по ID(" + targetId + "): " + colById);
+        BaseColumn col = myTable.findColumn("pi");
+        if (col != null) {
+            System.out.println("Найдено через TreeMap: " + col);
         }
 
         // =====================================================================
-        // 2. ЭМУЛЯЦИЯ ПЕРЕГРУЗКИ ОПЕРАТОРОВ И СРАВНЕНИЕ (equals, compareTo)
+        // 2. АЛГОРИТМЫ (Stream API)
         // =====================================================================
-        System.out.println("\n--- 2. Значимый класс PhysicalQuantity ---");
-        PhysicalQuantity q1 = new PhysicalQuantity(10.5, 0.1);
-        PhysicalQuantity q2 = new PhysicalQuantity(5.2, 0.2);
+        AlgorithmsDemo.run();
 
-        // В Java вместо + и += используются методы
-        PhysicalQuantity q3 = q1.plus(q2);
-        System.out.println("q1.plus(q2) = " + q3);
+        // =====================================================================
+        // 3. std::variant (sealed interface + record)
+        // =====================================================================
+        System.out.println("\n--- 3. sealed interface (аналог variant) ---");
+        CalculationResult res1 = new NumberResult(42.5);
+        CalculationResult res2 = new ErrorResult(new PhysicalQuantity(10.5, 0.2));
+        CalculationResult res3 = new TextResult("Неизвестная переменная");
+
+        ResultPrinter.print(res1);
+        ResultPrinter.print(res2);
+        ResultPrinter.print(res3);
+
+        // =====================================================================
+        // 4. ЛЯМБДЫ И ЗАХВАТ
+        // =====================================================================
+        LambdaDemo.run();
+
+        // =====================================================================
+        // 5. FUNCTION В ПОЛЕ (Замена стратегии)
+        // =====================================================================
+        System.out.println("\n--- 5. Function в поле (Замена стратегии) ---");
         
-        PhysicalQuantity q4 = q3.plus(q1);
-        System.out.println("q3.plus(q1) = " + q4);
-        
-        PhysicalQuantity q5 = q1.times(3);
-        System.out.println("q1.times(3) = " + q5);
+        FormulaColumn fCol = new FormulaColumn("Тест", "test", 2, 
+            vars -> 42.0
+        );
+        fCol.calculate();
 
-        // Сравнение (equals и compareTo)
-        System.out.println("q1.equals(q2): " + q1.equals(q2));
-        System.out.println("q1.compareTo(q2) > 0: " + (q1.compareTo(q2) > 0));
-
-        // =====================================================================
-        // 3. АНАЛОГ ДРУЖЕСТВЕННЫХ ФУНКЦИЙ (package-private)
-        // =====================================================================
-        System.out.println("\n--- 3. Аналог friend (package-private) ---");
-        // Класс ColumnPrinter находится в том же пакете (по умолчанию), 
-        // поэтому он имеет доступ к полю name напрямую (без геттера).
-        ColumnPrinter.printRawName(colByName);
-
-        // =====================================================================
-        // 4. ОБОБЩЁННЫЙ МЕТОД С ОГРАНИЧЕНИЕМ (<T extends Number>)
-        // =====================================================================
-        System.out.println("\n--- 4. Обобщённый метод Average ---");
-        
-        Integer[] ints = {1, 2, 3, 4, 5};
-        System.out.println("Среднее (Integer): " + Calculations.average(ints));
-        
-        Double[] doubles = {1.5, 2.5, 3.5};
-        System.out.println("Среднее (Double): " + Calculations.average(doubles));
-        
-        Float[] floats = {1.0f, 2.0f, 3.0f};
-        System.out.println("Среднее (Float): " + Calculations.average(floats));
-
-        // Демонстрация того, что концепт работает (не скомпилируется, если раскомментировать):
-        // String[] strings = {"a", "b"};
-        // System.out.println(Calculations.average(strings)); // Ошибка: String не является Number
-
-        // =====================================================================
-        // 5. ОБОБЩЁННЫЙ КЛАСС И ОБОБЩЁННЫЙ МЕТОД
-        // =====================================================================
-        System.out.println("\n--- 5. Обобщённый класс ColumnContainer ---");
-
-        // Шаблон используется с типом 1: InputColumn
-        ColumnContainer<InputColumn> inputContainer = new ColumnContainer<>();
-        inputContainer.add(new InputColumn("angle_1", "a1", 2));
-        inputContainer.add(new InputColumn("angle_2", "a2", 2));
-
-        // Шаблон используется с типом 2: BaseColumn
-        ColumnContainer<BaseColumn> allContainer = new ColumnContainer<>();
-        allContainer.add(new ConstantColumn("g", "g", 2, 9.81));
-
-        // Демонстрация обобщённого метода mergeFrom
-        System.out.println("Переливаем InputColumn в BaseColumn...");
-        allContainer.mergeFrom(inputContainer);
-
-        System.out.println("Размер общего контейнера: " + allContainer.size());
-        for (int i = 0; i < allContainer.size(); i++) {
-            System.out.println("  Элемент [" + i + "]: " + allContainer.get(i));
-        }
-
-        // Демонстрация ограничения <T extends BaseColumn> (не скомпилируется, если раскомментировать):
-        // ColumnContainer<Integer> invalidContainer = new ColumnContainer<>(); 
+        fCol.setCalculator(vars -> {
+            double sum = 0.0;
+            for (double v : vars.values()) sum += v;
+            return sum;
+        });
+        fCol.calculate(); 
 
         System.out.println("\n=== КОНЕЦ ===");
     }
