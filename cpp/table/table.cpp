@@ -6,6 +6,8 @@
 
 #include <iostream>
 #include <algorithm>
+#include <functional>
+#include <map>
 
 namespace lab_comps {
 
@@ -45,9 +47,9 @@ void Table::CreateInputColumn(const std::string& name, const std::string& var, i
     m_columns.push_back(std::move(col)); // Кладем в list
 }
 
-void Table::CreateFormulaColumn(const std::string& name, const std::string& var, 
-                                int precision, std::unique_ptr<IEvaluationStrategy> strategy) {
-    auto col = std::make_unique<FormulaColumn>(name, var, precision, std::move(strategy));
+void Table::CreateFormulaColumn(const std::string& name, const std::string& var,
+                             int precision, std::function<double(const std::map<std::string, double>&)> calcFunc) {
+    auto col = std::make_unique<FormulaColumn>(name, var, precision, std::move(calcFunc));
     m_lookup[var] = col.get();
     m_columns.push_back(std::move(col));
 }

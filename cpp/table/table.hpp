@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../columns/base_column.hpp"
-#include "../strategies/ievaluation_strategy.hpp"
 #include <string>
 #include <list>
 #include <map>
 #include <memory>
 #include <vector>
+#include <functional>
 
 namespace lab_comps {
 
@@ -34,7 +34,7 @@ public:
     // Создание колонок
     void CreateInputColumn(const std::string& name, const std::string& var, int precision);
     void CreateFormulaColumn(const std::string& name, const std::string& var,
-                             int precision, std::unique_ptr<IEvaluationStrategy> strategy);
+                             int precision, std::function<double(const std::map<std::string, double>&)> calcFunc);
     void CreateConstantColumn(const std::string& name, const std::string& var,
                               int precision, double value);
 

@@ -1,101 +1,78 @@
 #include "formula_column.hpp"
 
 #include <iostream>
-#include <map>
 #include <utility>
 
 namespace lab_comps {
 
 FormulaColumn::FormulaColumn(std::string name, std::string var, int precision, 
-                             std::unique_ptr<IEvaluationStrategy> strategy)
+                             std::function<double(const std::map<std::string, double>&)> calcFunc)
     : BaseColumn{ std::move(name), std::move(var), precision }
-    , m_strategy{ std::move(strategy) }
+    , m_calculator{ std::move(calcFunc) }
 {
     std::cout << "[FormulaColumn] Создана\n";
 }
 
-// 1. Конструктор копирования (ГЛУБОКАЯ КОПИЯ через Clone)
 FormulaColumn::FormulaColumn(const FormulaColumn& other)
     : BaseColumn{ other }
-    , m_strategy{ other.m_strategy ? other.m_strategy->Clone() : nullptr }
+    , m_calculator{ other.m_calculator }
 {
     std::cout << "[FormulaColumn] Копия: " << m_name << "\n";
 }
 
-// 2. Конструктор перемещения
 FormulaColumn::FormulaColumn(FormulaColumn&& other) noexcept
     : BaseColumn{ std::move(other) }
-    , m_strategy{ std::move(other.m_strategy) }
+    , m_calculator{ std::move(other.m_calculator) }
 {
     std::cout << "[FormulaColumn] Перемещение: " << m_name << "\n";
 }
 
-// 3. Оператор копирующего присваивания
 FormulaColumn& FormulaColumn::operator=(const FormulaColumn& other) {
     if (this == &other) return *this;
-    
-    BaseColumn::operator=(other); // копируем базу
-   m_strategy = other.m_strategy ? other.m_strategy->Clone() : nullptr;
-    
-    std::cout << "[FormulaColumn] Присваивание (копия): " << m_name << "\n";
+    BaseColumn::operator=(other);
+    m_calculator = other.m_calculator;
     return *this;
 }
 
-// 4. Оператор перемещающего присваивания
 FormulaColumn& FormulaColumn::operator=(FormulaColumn&& other) noexcept {
     if (this == &other) return *this;
-    
     BaseColumn::operator=(std::move(other));
-    m_strategy = std::move(other.m_strategy);
-    
-    std::cout << "[FormulaColumn] Присваивание (перемещение): " << m_name << "\n";
+    m_calculator = std::move(other.m_calculator);
     return *this;
 }
 
-// 5. Деструктор
 FormulaColumn::~FormulaColumn() {
     std::cout << "[FormulaColumn] Уничтожена: " << m_name << "\n";
 }
 
-std::string FormulaColumn::GetType() const {
-    return "Formula";
-}
+std::string FormulaColumn::GetType() const { return "Formula"; }
 
 std::string FormulaColumn::Describe() const {
-    if (m_strategy) {
-        return "Формула: " + m_name + " = " + m_strategy->GetView();
-    }
-    return "Формула: " + m_name + " (нет стратегии)";
+    return "Формула: " + m_name + " (лямбда)";
 }
 
-// ГЛУБОКАЯ КОПИЯ через Clone()
 std::unique_ptr<BaseColumn> FormulaColumn::Clone() const {
-    auto newStrategy = m_strategy ? m_strategy->Clone() : nullptr;
-    
-    auto copy = std::make_unique<FormulaColumn>(
-        m_name, m_var, m_precision, std::move(newStrategy)
-    );
+    auto copy = std::make_unique<FormulaColumn>(m_name, m_var, m_precision, m_calculator);
     copy->SetData(GetData());
     return copy;
 }
 
-void FormulaColumn::SetStrategy(std::unique_ptr<IEvaluationStrategy> strategy) {
-    m_strategy = std::move(strategy);
-    std::cout << "[FormulaColumn] Стратегия изменена для " << m_name << "\n";
+void FormulaColumn::SetCalculator(std::function<double(const std::map<std::string, double>&)> calcFunc) {
+    m_calculator = std::move(calcFunc);
+    std::cout << "[FormulaColumn] Поведение изменено для " << m_name << "\n";
 }
 
 void FormulaColumn::Calculate() {
-    if (!m_strategy) {
-        std::cout << "[FormulaColumn] Ошибка: нет стратегии для " << m_name << "\n";
+    if (!m_calculator) {
+        std::cout << "[FormulaColumn] Ошибка: нет поведения для " << m_name << "\n";
         return;
     }
     
     std::map<std::string, double> vars; 
-    double result = m_strategy->Evaluate(vars);
+    double result = m_calculator(vars);
     m_isCalculated = true;
     
-    std::cout << "[FormulaColumn] " << m_name 
-              << " (" << m_strategy->GetView() << ") = " << result << "\n";
+    std::cout << "[FormulaColumn] " << m_name << " = " << result << "\n";
 }
 
 } // namespace lab_comps
