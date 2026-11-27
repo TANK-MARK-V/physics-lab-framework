@@ -1,3 +1,4 @@
+package demos;
 import java.util.Objects;
 
 public class Measurement {
