@@ -1,9 +1,14 @@
-#include "base_column.hpp"
-#include "input_column.hpp"
-#include "formula_column.hpp"
-#include "constant_column.hpp"
-#include "strategies.hpp"
+#include "table/table.hpp"
+#include "table/table_calculator.hpp"
+#include "columns/base_column.hpp"
+#include "columns/input_column.hpp"
+#include "columns/formula_column.hpp"
+#include "columns/constant_column.hpp"
+#include "strategies/strategies.hpp"
 #include "exceptions.hpp"
+#include "physical_quantity.hpp"
+#include "calculations.hpp"
+#include "column_container.hpp"
 
 #include <iostream>
 #include <memory>
@@ -21,122 +26,109 @@ int main() {
     setlocale(LC_ALL, "ru_RU.UTF-8");
 #endif
 
-    std::cout << "=== ЛР-5: Полиморфизм, интерфейсы, исключения ===\n\n";
+    std::cout << "=== ЛР-6: Статический полиморфизм ===\n";
 
     // =====================================================================
-    // 1. ИНТЕРФЕЙС ICalculable И МНОЖЕСТВЕННОЕ НАСЛЕДОВАНИЕ
+    // 1. ПЕРЕГРУЗКА ФУНКЦИЙ И МЕТОДОВ
     // =====================================================================
-    std::cout << "--- 1. Интерфейс ICalculable и множественное наследование ---\n";
+    std::cout << "\n--- 1. Перегрузка функций (поиск в таблице) ---\n";
     
-    std::vector<std::unique_ptr<BaseColumn>> columns;
-    
-    columns.push_back(std::make_unique<InputColumn>("a", "a", 2));
-    columns.push_back(std::make_unique<InputColumn>("t", "t", 2));
-    
-    // Создаём колонку с формулой (стратегия FormulaEvaluation)
-    columns.push_back(std::make_unique<FormulaColumn>(
-        "v", "v", 2, std::make_unique<FormulaEvaluation>("a t")));
-    
-    // Создаём колонку с суммой (стратегия SumEvaluation)
-    columns.push_back(std::make_unique<FormulaColumn>(
-        "sum", "sum", 2, std::make_unique<SumEvaluation>()));
-    
-    // Константа
-    columns.push_back(std::make_unique<ConstantColumn>("g", "g", 2, 9.8));
+    Table myTable("Тестовая таблица", 3);
+    myTable.CreateInputColumn("Угол", "alpha", 2);
+    myTable.CreateConstantColumn("Гравитация", "g", 2, 9.81);
 
-    // Проверяем, кто реализует ICalculable через dynamic_cast
-    std::cout << "\nПроверка реализации ICalculable:\n";
-    for (const auto& col : columns) {
-        if (auto* calc = dynamic_cast<ICalculable*>(col.get())) {
-            std::cout << "  " << col->GetName() << " -> реализует ICalculable\n";
-        } else {
-            std::cout << "  " << col->GetName() << " -> НЕ реализует ICalculable\n";
-        }
+    // Поиск по имени (var)
+    BaseColumn* colByName = myTable.FindColumn("alpha");
+    if (colByName) {
+        std::cout << "Найдено по имени: " << *colByName << "\n";
+    }
+
+    // Поиск по ID
+    int targetId = colByName->GetId() + 1;
+    BaseColumn* colById = myTable.FindColumn(targetId);
+    if (colById) {
+        std::cout << "Найдено по ID(" << targetId << "): " << *colById << "\n";
     }
 
     // =====================================================================
-    // 2. РАННЕЕ И ПОЗДНЕЕ СВЯЗЫВАНИЕ
+    // 2. ПЕРЕГРУЗКА ОПЕРАТОРОВ
     // =====================================================================
-    std::cout << "\n--- 2. Раннее и позднее связывание ---\n";
+    std::cout << "\n--- 2. Перегрузка операторов (PhysicalQuantity) ---\n";
     
-    std::unique_ptr<BaseColumn> basePtr = std::make_unique<FormulaColumn>(
-        "test", "test", 2, std::make_unique<SimpleEvaluation>());
+    PhysicalQuantity q1(10.5, 0.1);
+    PhysicalQuantity q2(5.2, 0.2);
     
-    // GetName() — невиртуальный метод. Раннее связывание.
-    std::cout << "Невиртуальный метод (раннее): " << basePtr->GetName() << "\n";
+    // Арифметические операторы (+ и +=)
+    PhysicalQuantity q3 = q1 + q2; 
+    std::cout << "q1 + q2 = " << q3 << "\n";
     
-    // Describe() — виртуальный. Позднее связывание.
-    std::cout << "Виртуальный метод (позднее): " << basePtr->Describe() << "\n";
+    q3 += q1; 
+    std::cout << "q3 += q1 = " << q3 << "\n";
+    
+    // Операторы сравнения (==, > из <=>)
+    std::cout << std::boolalpha; 
+    std::cout << "q1 == q2: " << (q1 == q2) << "\n";
+    std::cout << "q1 > q2:  " << (q1 > q2) << "\n";
 
     // =====================================================================
-    // 3. DYNAMIC_CAST: ВЫЧИСЛЯЕМ ТОЛЬКО ICalculable
+    // 3. ДРУЖЕСТВЕННЫЕ ФУНКЦИИ
     // =====================================================================
-    std::cout << "\n--- 3. dynamic_cast: вычисляем только ICalculable ---\n";
+    std::cout << "\n--- 3. Дружественные функции (operator<<) ---\n";
     
-    for (const auto& col : columns) {
-        if (auto* calc = dynamic_cast<ICalculable*>(col.get())) {
-            std::cout << "Вычисляем " << col->GetName() << ":\n";
-            calc->Calculate();
-        } else {
-            std::cout << col->GetName() << ": не требует вычисления (только данные)\n";
-        }
-    }
+    // Дружественная функция для значимого класса
+    std::cout << "Вывод PhysicalQuantity: " << q1 << "\n";
+    
+    // Дружественная (свободная) функция для иерархии
+    std::cout << "Вывод иерархии через базовый класс:\n";
+    std::cout << "  " << *colByName << "\n"; // Выведет InputColumn
+    std::cout << "  " << *colById << "\n";   // Выведет ConstantColumn
 
     // =====================================================================
-    // 4. КОНФИГУРИРОВАНИЕ (ОБЪЕКТ ПОВЕДЕНИЯ)
+    // 4. ШАБЛОННАЯ ФУНКЦИЯ С КОНЦЕПТОМ
     // =====================================================================
-    std::cout << "\n--- 4. Конфигурирование (объект поведения) ---\n";
+    std::cout << "\n--- 4. Шаблонная функция Average ---\n";
     
-    auto dynamicCol = std::make_unique<FormulaColumn>(
-        "dyn", "dyn", 2, std::make_unique<SimpleEvaluation>());
+    // Вызов с int
+    std::vector<int> ints = {1, 2, 3, 4, 5};
+    std::cout << "Среднее (int): " << Average(ints) << "\n";
     
-    std::cout << "Стратегия 1 (SimpleEvaluation):\n";
-    dynamicCol->Calculate(); // 42.0
-    
-    std::cout << "\nМеняем стратегию на SumEvaluation:\n";
-    dynamicCol->SetStrategy(std::make_unique<SumEvaluation>());
-    dynamicCol->Calculate(); // 0 (так как vars пустая)
+    // Вызов с double
+    std::vector<double> doubles = {1.5, 2.5, 3.5};
+    std::cout << "Среднее (double): " << Average(doubles) << "\n";
+
+    // Вызов с float
+    std::vector<float> floats = {1.0f, 2.0f, 3.0f};
+    std::cout << "Среднее (float): " << Average(floats) << "\n";
+
+    // Демонстрация ограничения концепта (не скомпилируется, если раскомментировать):
+    // std::vector<std::string> strings = {"a", "b"};
+    // std::cout << Average(strings); 
 
     // =====================================================================
-    // 5. ИСКЛЮЧЕНИЯ
+    // 5. ШАБЛОННЫЙ КЛАСС И ШАБЛОННЫЙ МЕТОД
     // =====================================================================
-    std::cout << "\n--- 5. Исключения (проверка точности) ---\n";
+    std::cout << "\n--- 5. Шаблонный класс ColumnContainer ---\n";
+
+    // Шаблон используется с типом 1: InputColumn
+    ColumnContainer<InputColumn> inputContainer;
+    inputContainer.Add(std::make_unique<InputColumn>("angle_1", "a1", 2));
+    inputContainer.Add(std::make_unique<InputColumn>("angle_2", "a2", 2));
     
-    // Успешное действие
-    try {
-        auto goodCol = std::make_unique<InputColumn>("good", "good", 2);
-        std::cout << "Колонка 'good' создана успешно\n";
-    } catch (const std::exception& e) {
-        std::cout << "Ошибка: " << e.what() << "\n";
-    }
-    
-    // Нарушение правила
-    try {
-        auto badCol = std::make_unique<InputColumn>("bad", "bad", -5);
-        std::cout << "Колонка создана (этого не должно быть!)\n";
-    } 
-    catch (const InvalidPrecisionError& e) { // Частное — первым
-        std::cout << "Поймано частное исключение: " << e.what() << "\n";
-    }
-    catch (const std::exception& e) { // Общее — вторым
-        std::cout << "Поймано общее исключение: " << e.what() << "\n";
+    // Шаблон используется с типом 2: BaseColumn
+    ColumnContainer<BaseColumn> allContainer;
+    allContainer.Add(std::make_unique<ConstantColumn>("g", "g", 2, 9.81));
+
+    // Демонстрация шаблонного метода MergeFrom
+    std::cout << "Переливаем InputColumn в BaseColumn...\n";
+    allContainer.MergeFrom(inputContainer);
+
+    std::cout << "Размер общего контейнера: " << allContainer.Size() << "\n";
+    for (std::size_t i = 0; i < allContainer.Size(); ++i) {
+        std::cout << "  Элемент [" << i << "]: " << allContainer[i] << "\n";
     }
 
-    // =====================================================================
-    // 6. ГЛУБОКАЯ КОПИЯ (Clone)
-    // =====================================================================
-    std::cout << "\n--- 6. Глубокая копия (Clone) ---\n";
-    
-    auto original = std::make_unique<FormulaColumn>(
-        "v", "v", 2, std::make_unique<FormulaEvaluation>("a t"));
-    
-    auto deepCopy = original->Clone();
-    
-    // Меняем стратегию у оригинала
-    original->SetStrategy(std::make_unique<SumEvaluation>());
-    
-    std::cout << "original: " << original->Describe() << "\n";
-    std::cout << "deep:     " << deepCopy->Describe() << "\n"; // Не изменится
+    // Демонстрация ограничения std::derived_from (не скомпилируется, если раскомментировать):
+    // ColumnContainer<int> invalidContainer; 
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;

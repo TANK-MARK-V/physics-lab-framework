@@ -1,13 +1,12 @@
 #pragma once
 
-#include "base_column.hpp"
-#include "ievaluation_strategy.hpp"
+#include "../columns/base_column.hpp"
+#include "../strategies/ievaluation_strategy.hpp"
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace lab_comps {
-
 
 class Table {
 private:
@@ -36,6 +35,10 @@ public:
 
     // Расчёт
     void Calculate();
+
+    // ПЕРЕГРУЗКА ФУНКЦИЙ: поиск колонки по имени переменной (var) и по ID
+    [[nodiscard]] BaseColumn* FindColumn(const std::string& var) const;
+    [[nodiscard]] BaseColumn* FindColumn(int id) const;
 };
 
 } // namespace lab_comps

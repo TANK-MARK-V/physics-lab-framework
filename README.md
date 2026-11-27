@@ -37,7 +37,7 @@
 ## Сборка и запуск
 
 ### **C++:**
-g++ -Wno-attributes *.cpp -o app.exe
+g++ -std=c++20 -Wall -Wextra main.cpp physical_quantity.cpp columns/*.cpp table/*.cpp -o app.exe
 app.exe
 
 ### **Java:**

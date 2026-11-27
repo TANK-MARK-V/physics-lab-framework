@@ -1,9 +1,9 @@
 #include "table.hpp"
-#include "base_column.hpp"
-#include "input_column.hpp"
-#include "formula_column.hpp"
-#include "constant_column.hpp"
-#include "ievaluation_strategy.hpp"
+#include "../columns/base_column.hpp"
+#include "../columns/input_column.hpp"
+#include "../columns/formula_column.hpp"
+#include "../columns/constant_column.hpp"
+#include "../strategies/ievaluation_strategy.hpp"
 #include "table_calculator.hpp"
 
 #include <iostream>
@@ -69,6 +69,25 @@ void Table::Calculate() {
         calc.AddCol(col.get());  // BaseColumn*
     }
     calc.TryCalculate();
+}
+
+// Реализация перегруженных функций поиска
+BaseColumn* Table::FindColumn(const std::string& var) const {
+    for (const auto& col : m_columns) {
+        if (col->GetVar() == var) {
+            return col.get();
+        }
+    }
+    return nullptr;
+}
+
+BaseColumn* Table::FindColumn(int id) const {
+    for (const auto& col : m_columns) {
+        if (col->GetId() == id) {
+            return col.get();
+        }
+    }
+    return nullptr;
 }
 
 } // namespace lab_comps

@@ -6,8 +6,7 @@ namespace lab_comps {
 // Стратегия 1: Простая заглушка (как было раньше)
 class SimpleEvaluation : public IEvaluationStrategy {
 public:
-    double Evaluate(const std::map<std::string, double>& vars) const override { return 42.0; }
-    
+    double Evaluate(const std::map<std::string, double>&) const override { return 42.0; }
     std::string GetView() const override { return "Заглушка (42.0)"; }
     
     std::unique_ptr<IEvaluationStrategy> Clone() const override {
@@ -41,7 +40,7 @@ private:
 public:
     explicit FormulaEvaluation(std::string expression) : m_expression(std::move(expression)) {}
     
-    double Evaluate(const std::map<std::string, double>& vars) const override { return 42.0; }
+    double Evaluate(const std::map<std::string, double>&) const override { return 42.0; }
     
     std::string GetView() const override { return "Формула: " + m_expression; }
     
