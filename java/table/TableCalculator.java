@@ -15,6 +15,9 @@ public class TableCalculator implements AutoCloseable {
         System.out.println("[+] Калькулятор открыт");
     }
 
+    public int getReadyCount() { return readyCols.size(); }
+    public int getPendingCount() { return pendingCols.size(); }
+
     public void addCol(BaseColumn col) {
         if (col.getData() != null && col.getData().length == experiments) {
             readyCols.add(col);
