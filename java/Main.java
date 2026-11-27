@@ -1,7 +1,6 @@
 // import columns.*;
-import demos.AlgorithmsDemo;
 // import table.*;
-// import demos.*;
+import demos.*;
 // import exceptions.*;
 // import java.util.Arrays;
 
@@ -19,6 +18,9 @@ public class Main {
         ResultPrinter.print(res1);
         ResultPrinter.print(res2);
         ResultPrinter.print(res3);
+
+        // Демонстрация лямбд (Java)
+        LambdaDemo.run();
 
         System.out.println("\n=== КОНЕЦ ===");
     }
