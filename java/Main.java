@@ -1,5 +1,4 @@
 import columns.*;
-import strategies.*;
 import table.*;
 import exceptions.*;
 import java.util.Arrays;

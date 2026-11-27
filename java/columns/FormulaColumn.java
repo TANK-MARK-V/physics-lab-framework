@@ -1,21 +1,17 @@
 package columns;
-import strategies.EvaluationStrategy;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public class FormulaColumn extends BaseColumn implements Calculable {
-    private EvaluationStrategy strategy;
+    // Заменили стратегию на Function
+    private Function<Map<String, Double>, Double> calculator;
     private boolean isCalculated = false;
 
-    public FormulaColumn(String name, String var, int precision, EvaluationStrategy strategy) {
+    public FormulaColumn(String name, String var, int precision, Function<Map<String, Double>, Double> calculator) {
         super(name, var, precision);
-        this.strategy = strategy;
+        this.calculator = calculator;
         System.out.println("[FormulaColumn] Создана");
-    }
-
-    // Конструктор копирования (глубокая копия через clone)
-    public FormulaColumn(FormulaColumn other) {
-        super(other.name, other.var, other.precision);
-        this.strategy = other.strategy != null ? other.strategy.clone() : null;
-        System.out.println("[FormulaColumn] Копия: " + name);
     }
 
     @Override
@@ -25,38 +21,30 @@ public class FormulaColumn extends BaseColumn implements Calculable {
 
     @Override
     public String describe() {
-        if (strategy != null) {
-            return "Формула: " + name + " = " + strategy.getView();
-        }
-        return "Формула: " + name + " (нет стратегии)";
+        return "Формула: " + name + " (лямбда)";
     }
 
     @Override
     public BaseColumn clone() {
-        return new FormulaColumn(this);
+        return new FormulaColumn(this.name, this.var, this.precision, this.calculator);
     }
 
-    // Динамическое конфигурирование
-    public void setStrategy(EvaluationStrategy strategy) {
-        this.strategy = strategy;
-        System.out.println("[FormulaColumn] Стратегия изменена для " + name);
+    // Смена поведения
+    public void setCalculator(Function<Map<String, Double>, Double> calculator) {
+        this.calculator = calculator;
+        System.out.println("[FormulaColumn] Поведение изменено для " + name);
     }
 
-    public EvaluationStrategy getStrategy() {
-        return strategy;
-    }
-
-    // Реализация Calculable
     @Override
     public void calculate() {
-        if (strategy == null) {
-            System.out.println("[FormulaColumn] Ошибка: нет стратегии для " + name);
+        if (calculator == null) {
+            System.out.println("[FormulaColumn] Ошибка: нет поведения для " + name);
             return;
         }
-        java.util.Map<String, Double> vars = new java.util.HashMap<>();
-        double result = strategy.evaluate(vars);
+        Map<String, Double> vars = new HashMap<>();
+        double result = calculator.apply(vars);
         isCalculated = true;
-        System.out.println("[FormulaColumn] " + name + " (" + strategy.getView() + ") = " + result);
+        System.out.println("[FormulaColumn] " + name + " = " + result);
     }
 
     @Override

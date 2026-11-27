@@ -3,8 +3,6 @@ import java.util.*;
 
 import columns.BaseColumn;
 import columns.Calculable;
-import columns.FormulaColumn;
-import strategies.FormulaEvaluation;
 
 public class TableCalculator implements AutoCloseable {
     private final int experiments;
@@ -52,14 +50,8 @@ public class TableCalculator implements AutoCloseable {
         return pendingCols.isEmpty();
     }
 
+    // Убрали проверку на FormulaEvaluation, так как теперь там лямбды
     private boolean canCalculate(BaseColumn col) {
-        if (col instanceof FormulaColumn formulaCol) {
-            // Проверяем зависимости по стратегии (если FormulaEvaluation)
-            if (formulaCol.getStrategy() instanceof FormulaEvaluation formulaEval) {
-                formulaEval.getView();  // Компилятор ругается, если не использовать переменную
-                // Можно добавить проверку переменных
-            }
-        }
         return true;
     }
 
