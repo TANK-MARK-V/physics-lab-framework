@@ -9,6 +9,8 @@ namespace lab_comps {
 
 class BaseColumn;
 
+// std::vector используется для хранения указателей на колонки. 
+// Быстрый доступ по индексу и добавление в конец.
 class TableCalculator {
 private:
     int m_experiments;
@@ -20,6 +22,10 @@ public:
     TableCalculator() = delete;
     TableCalculator(int experiments);
     ~TableCalculator();
+
+        // Геттеры для демонстрации использования вектора
+    [[nodiscard]] std::size_t GetReadyCount() const { return m_readyCols.size(); }
+    [[nodiscard]] std::size_t GetPendingCount() const { return m_pendingCols.size(); }
 
     void AddCol(BaseColumn* col);
     bool TryCalculate();
