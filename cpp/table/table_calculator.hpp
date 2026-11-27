@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <list>
 
 namespace lab_comps {
 
@@ -11,8 +12,8 @@ class BaseColumn;
 class TableCalculator {
 private:
     int m_experiments;
-    std::vector<BaseColumn*> m_readyCols;
-    std::vector<BaseColumn*> m_pendingCols;
+    std::vector<BaseColumn*> m_readyCols;   // Вектор для готовых
+    std::vector<BaseColumn*> m_pendingCols; // Вектор для ожидающих
     std::map<std::string, bool> m_varsStates;
 
 public:

@@ -3,8 +3,10 @@
 #include "../columns/base_column.hpp"
 #include "../strategies/ievaluation_strategy.hpp"
 #include <string>
-#include <vector>
+#include <list>
+#include <map>
 #include <memory>
+#include <vector>
 
 namespace lab_comps {
 
@@ -12,7 +14,13 @@ class Table {
 private:
     std::string m_name;
     int m_experiments;
-    std::vector<std::unique_ptr<BaseColumn>> m_columns;
+    
+    // 1. std::list для гибкой вставки колонок в любое место
+    std::list<std::unique_ptr<BaseColumn>> m_columns;
+    
+    // 2. std::map для быстрого поиска колонки по имени переменной
+    // Храним "var" -> указатель на колонку (итератор было бы сложнее)
+    std::map<std::string, BaseColumn*> m_lookup;
 
 public:
     Table();
@@ -21,14 +29,17 @@ public:
 
     [[nodiscard]] const std::string& GetName() const;
     [[nodiscard]] int GetExperiments() const;
-    [[nodiscard]] const std::vector<std::unique_ptr<BaseColumn>>& GetColumns() const;
+    [[nodiscard]] const std::list<std::unique_ptr<BaseColumn>>& GetColumns() const;
 
-    // Создание колонок разных типов
+    // Создание колонок
     void CreateInputColumn(const std::string& name, const std::string& var, int precision);
     void CreateFormulaColumn(const std::string& name, const std::string& var,
                              int precision, std::unique_ptr<IEvaluationStrategy> strategy);
     void CreateConstantColumn(const std::string& name, const std::string& var,
                               int precision, double value);
+
+    // Вставка в середину (демонстрация для std::list)
+    void InsertColumnAt(std::size_t index, std::unique_ptr<BaseColumn> col);
 
     // Установить данные
     void SetColumnData(const std::string& var, const std::vector<double>& data);
@@ -36,7 +47,7 @@ public:
     // Расчёт
     void Calculate();
 
-    // ПЕРЕГРУЗКА ФУНКЦИЙ: поиск колонки по имени переменной (var) и по ID
+    // Поиск (теперь через std::map)
     [[nodiscard]] BaseColumn* FindColumn(const std::string& var) const;
     [[nodiscard]] BaseColumn* FindColumn(int id) const;
 };
