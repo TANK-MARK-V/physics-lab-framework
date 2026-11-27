@@ -9,6 +9,7 @@
 #include "physical_quantity.hpp"
 #include "calculations.hpp"
 #include "algorithms_demo.hpp"
+#include "calculation_result.hpp"
 
 #include <iostream>
 #include <memory>
@@ -32,6 +33,19 @@ int main() {
     // ДЕМОНСТРАЦИЯ АЛГОРИТМОВ
     // =====================================================================
     RunAlgorithmsDemo();
+
+    // ==============================================================
+    // ДЕМОНСТРАЦИЯ std::variant и std::visit
+    // ==============================================================
+    std::cout << "\n--- std::variant ---\n";
+
+    CalculationResult res1 = NumberResult{ 42.5 };
+    CalculationResult res2 = ErrorResult{ PhysicalQuantity(10.5, 0.2) };
+    CalculationResult res3 = TextResult{ "Неизвестная переменная" };
+
+    PrintResult(res1);
+    PrintResult(res2);
+    PrintResult(res3);
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;
