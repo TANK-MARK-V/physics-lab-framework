@@ -37,7 +37,7 @@
 ## Сборка и запуск
 
 ### **C++:**
-`g++ -std=c++20 -Wall -Wextra *.cpp columns/*.cpp table/*.cpp -o app.exe`
+`g++ -std=c++20 -Wall -Wextra *.cpp columns/*.cpp table/*.cpp demos/*cpp -o app.exe`
 `app.exe`
 
 ### **Java:**

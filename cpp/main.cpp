@@ -8,7 +8,8 @@
 #include "exceptions.hpp"
 #include "physical_quantity.hpp"
 #include "calculations.hpp"
-#include "algorithms_demo.hpp"
+#include "demos/algorithms_demo.hpp"
+#include "demos/lambdas_demo.hpp"
 #include "calculation_result.hpp"
 
 #include <iostream>
@@ -46,6 +47,12 @@ int main() {
     PrintResult(res1);
     PrintResult(res2);
     PrintResult(res3);
+
+    
+    // =====================================================================
+    // ДЕМОНСТРАЦИЯ ЗАХВАТОВ
+    // =====================================================================
+    RunLambdasDemo();
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;
