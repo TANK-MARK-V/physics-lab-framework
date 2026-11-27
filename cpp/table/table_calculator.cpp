@@ -37,8 +37,7 @@ bool TableCalculator::TryCalculate() {
                 m_varsStates[col->GetVar()] = true;
                 it = m_pendingCols.erase(it);
                 progress = true;
-                std::cout << "[TableCalculator] Вычислена: " 
-                          << col->GetName() << "\n";
+                std::cout << "[TableCalculator] Вычислена: " << col->GetName() << "\n";
             } else {
                 ++it;
             }
@@ -47,8 +46,8 @@ bool TableCalculator::TryCalculate() {
     return m_pendingCols.empty();
 }
 
-bool TableCalculator::CanCalculate(BaseColumn*) const {
-    // Пока заглушка: просто проверяем зависимости по формуле
+bool TableCalculator::CanCalculate(BaseColumn* /*col*/) const {
+    // TODO: Потом можно проверять каким-нибудь алгоритмом
     return true;
 }
 

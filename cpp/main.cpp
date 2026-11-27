@@ -4,18 +4,22 @@
 #include "columns/input_column.hpp"
 #include "columns/formula_column.hpp"
 #include "columns/constant_column.hpp"
-#include "strategies/strategies.hpp"
 #include "exceptions.hpp"
 #include "physical_quantity.hpp"
 #include "calculations.hpp"
-#include "column_container.hpp"
+#include "demos/algorithms_demo.hpp"
+#include "demos/lambdas_demo.hpp"
+#include "calculation_result.hpp"
 
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <array>
+#include <span>
 #include <clocale>
 #include <cstdlib>
 #include <map>
+#include <functional>
 
 using namespace lab_comps;
 
@@ -26,109 +30,111 @@ int main() {
     setlocale(LC_ALL, "ru_RU.UTF-8");
 #endif
 
-    std::cout << "=== ЛР-6: Статический полиморфизм ===\n";
+    std::cout << "=== ЛР-7: Контейнеры, алгоритмы и лямбда-функции ===\n";
 
     // =====================================================================
-    // 1. ПЕРЕГРУЗКА ФУНКЦИЙ И МЕТОДОВ
+    // 1. ДЕМОНСТРАЦИЯ ВСЕХ КОНТЕЙНЕРОВ
     // =====================================================================
-    std::cout << "\n--- 1. Перегрузка функций (поиск в таблице) ---\n";
+    std::cout << "\n--- 1. Контейнеры: array, vector, span ---\n";
+
+    // 1.1. std::array (Коэффициенты Стьюдента)
+    constexpr std::array<double, 5> STUDENT_COEFFS = {0.0, 12.7, 4.3, 3.18, 2.78};
+    std::cout << "Коэффициент Стьюдента для n=3: " << STUDENT_COEFFS[2] << "\n";
+
+    // 1.2. std::vector (в TableCalculator)
+    std::cout << "Использование std::vector в TableCalculator:\n";
     
-    Table myTable("Тестовая таблица", 3);
+    // Создаем колонки (владельцем будет Table, но для демо калькулятора создадим локально)
+    InputColumn c1("Угол", "a", 2);
+    ConstantColumn c2("g", "g", 2, 9.81);
+    
+    TableCalculator calc(3);
+    calc.AddCol(&c1); // Добавится в pending (нет данных)
+    calc.AddCol(&c2); // Добавится в pending
+    
+    std::cout << "  Готовых: " << calc.GetReadyCount() 
+              << ", Ожидающих: " << calc.GetPendingCount() << "\n";
+    
+
+    // 1.3. std::span (Окно на данные)
+    // Передаем часть вектора
+    std::vector<double> results = {10.5, 20.1, 15.3, 8.9};
+    std::span<const double> firstThree(results.begin(), 3);
+    // ИСПРАВЛЕНИЕ: Явно указываем тип double для шаблона
+    std::cout << "Среднее первых трех результатов: " << Average<double>(firstThree) << "\n";
+    
+    // Передаем весь std::array целиком
+    std::cout << "Среднее коэффициентов: " << Average<double>(std::span(STUDENT_COEFFS)) << "\n";
+
+    // 1.4. Обобщённая лямбда (вывод разных контейнеров)
+    auto printContainer = [](const auto& container) {
+        std::cout << "  Элементы: ";
+        for (const auto& el : container) std::cout << el << " ";
+        std::cout << "\n";
+    };
+    std::cout << "Обобщённая лямбда:\n";
+    printContainer(results);        // Вектор
+    printContainer(STUDENT_COEFFS); // Массив
+
+    // =====================================================================
+    // 2. КОНТЕЙНЕРЫ В TABLE (list и map)
+    // =====================================================================
+    std::cout << "\n--- 2. Контейнеры в Table (list, map) ---\n";
+    
+    Table myTable("Физика", 3);
     myTable.CreateInputColumn("Угол", "alpha", 2);
     myTable.CreateConstantColumn("Гравитация", "g", 2, 9.81);
+    
+    // Вставка в середину (благодаря std::list)
+    myTable.InsertColumnAt(1, std::make_unique<ConstantColumn>("Пи", "pi", 2, 3.14));
 
-    // Поиск по имени (var)
-    BaseColumn* colByName = myTable.FindColumn("alpha");
-    if (colByName) {
-        std::cout << "Найдено по имени: " << *colByName << "\n";
-    }
-
-    // Поиск по ID
-    int targetId = colByName->GetId() + 1;
-    BaseColumn* colById = myTable.FindColumn(targetId);
-    if (colById) {
-        std::cout << "Найдено по ID(" << targetId << "): " << *colById << "\n";
+    // Поиск по имени (через std::map)
+    BaseColumn* col = myTable.FindColumn("pi");
+    if (col) {
+        std::cout << "Найдено через map: " << *col << "\n";
     }
 
     // =====================================================================
-    // 2. ПЕРЕГРУЗКА ОПЕРАТОРОВ
+    // 3. СТРУКТУРА Measurement И АЛГОРИТМЫ
     // =====================================================================
-    std::cout << "\n--- 2. Перегрузка операторов (PhysicalQuantity) ---\n";
-    
-    PhysicalQuantity q1(10.5, 0.1);
-    PhysicalQuantity q2(5.2, 0.2);
-    
-    // Арифметические операторы (+ и +=)
-    PhysicalQuantity q3 = q1 + q2; 
-    std::cout << "q1 + q2 = " << q3 << "\n";
-    
-    q3 += q1; 
-    std::cout << "q3 += q1 = " << q3 << "\n";
-    
-    // Операторы сравнения (==, > из <=>)
-    std::cout << std::boolalpha; 
-    std::cout << "q1 == q2: " << (q1 == q2) << "\n";
-    std::cout << "q1 > q2:  " << (q1 > q2) << "\n";
+    RunAlgorithmsDemo();
 
     // =====================================================================
-    // 3. ДРУЖЕСТВЕННЫЕ ФУНКЦИИ
+    // 4. std::variant И std::visit
     // =====================================================================
-    std::cout << "\n--- 3. Дружественные функции (operator<<) ---\n";
-    
-    // Дружественная функция для значимого класса
-    std::cout << "Вывод PhysicalQuantity: " << q1 << "\n";
-    
-    // Дружественная (свободная) функция для иерархии
-    std::cout << "Вывод иерархии через базовый класс:\n";
-    std::cout << "  " << *colByName << "\n"; // Выведет InputColumn
-    std::cout << "  " << *colById << "\n";   // Выведет ConstantColumn
+    std::cout << "\n--- 4. std::variant ---\n";
+    CalculationResult res1 = NumberResult{ 42.5 };
+    CalculationResult res2 = ErrorResult{ PhysicalQuantity(10.5, 0.2) };
+    CalculationResult res3 = TextResult{ "Неизвестная переменная" };
 
-    // =====================================================================
-    // 4. ШАБЛОННАЯ ФУНКЦИЯ С КОНЦЕПТОМ
-    // =====================================================================
-    std::cout << "\n--- 4. Шаблонная функция Average ---\n";
-    
-    // Вызов с int
-    std::vector<int> ints = {1, 2, 3, 4, 5};
-    std::cout << "Среднее (int): " << Average(ints) << "\n";
-    
-    // Вызов с double
-    std::vector<double> doubles = {1.5, 2.5, 3.5};
-    std::cout << "Среднее (double): " << Average(doubles) << "\n";
-
-    // Вызов с float
-    std::vector<float> floats = {1.0f, 2.0f, 3.0f};
-    std::cout << "Среднее (float): " << Average(floats) << "\n";
-
-    // Демонстрация ограничения концепта (не скомпилируется, если раскомментировать):
-    // std::vector<std::string> strings = {"a", "b"};
-    // std::cout << Average(strings); 
+    PrintResult(res1);
+    PrintResult(res2);
+    PrintResult(res3);
 
     // =====================================================================
-    // 5. ШАБЛОННЫЙ КЛАСС И ШАБЛОННЫЙ МЕТОД
+    // 5. ЛЯМБДЫ И ЗАХВАТ (демо в отдельном файле)
     // =====================================================================
-    std::cout << "\n--- 5. Шаблонный класс ColumnContainer ---\n";
+    RunLambdasDemo();
 
-    // Шаблон используется с типом 1: InputColumn
-    ColumnContainer<InputColumn> inputContainer;
-    inputContainer.Add(std::make_unique<InputColumn>("angle_1", "a1", 2));
-    inputContainer.Add(std::make_unique<InputColumn>("angle_2", "a2", 2));
+    // =====================================================================
+    // 6. std::function В ПОЛЕ (Замена стратегии)
+    // =====================================================================
+    std::cout << "\n--- 6. std::function в поле ---\n";
     
-    // Шаблон используется с типом 2: BaseColumn
-    ColumnContainer<BaseColumn> allContainer;
-    allContainer.Add(std::make_unique<ConstantColumn>("g", "g", 2, 9.81));
+    // Лямбда 1: Возвращает 42
+    FormulaColumn fCol("Тест", "test", 2, [](const std::map<std::string, double>&) { 
+        return 42.0; 
+    });
+    fCol.Calculate();
+    
+    // Меняем поведение на сумму
+    fCol.SetCalculator([](const std::map<std::string, double>& vars) {
+        double sum = 0.0;
+        for (const auto& kv : vars) sum += kv.second;
+        return sum;
+    });
+    fCol.Calculate();
 
-    // Демонстрация шаблонного метода MergeFrom
-    std::cout << "Переливаем InputColumn в BaseColumn...\n";
-    allContainer.MergeFrom(inputContainer);
-
-    std::cout << "Размер общего контейнера: " << allContainer.Size() << "\n";
-    for (std::size_t i = 0; i < allContainer.Size(); ++i) {
-        std::cout << "  Элемент [" << i << "]: " << allContainer[i] << "\n";
-    }
-
-    // Демонстрация ограничения std::derived_from (не скомпилируется, если раскомментировать):
-    // ColumnContainer<int> invalidContainer; 
 
     std::cout << "\n=== КОНЕЦ ===\n";
     return 0;
